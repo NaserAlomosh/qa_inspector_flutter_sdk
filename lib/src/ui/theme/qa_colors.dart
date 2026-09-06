@@ -12,6 +12,10 @@ abstract final class QaColors {
   static const navigation = Color(0xFF2970C8);
   static const navigationDark = Color(0xFF7BB6FF);
   static const slate = Color(0xFF647184);
+  static const canvas = Color(0xFFF3F5F8);
+  static const surface = Color(0xFFFCFCFE);
+  static const border = Color(0xFFDDE2EA);
   static const darkCanvas = Color(0xFF10131A);
   static const darkSurface = Color(0xFF191D27);
+  static const darkBorder = Color(0xFF303644);
 }

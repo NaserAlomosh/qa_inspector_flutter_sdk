@@ -27,6 +27,88 @@ void main() {
     controller.dispose();
   });
 
+  testWidgets('QA button drag moves and snaps without opening inspector', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(400, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+    final controller = _controller();
+    await tester.pumpWidget(_host(controller));
+    final button = find.byKey(const Key('qa-inspector-button'));
+    final initial = tester.getRect(button);
+
+    await tester.drag(button, const Offset(-260, -250));
+    await tester.pumpAndSettle();
+    final moved = tester.getRect(button);
+
+    expect(moved.left, 16);
+    expect(moved.top, closeTo(initial.top - 250, 1));
+    expect(find.byKey(const Key('qa-inspector-overlay')), findsNothing);
+    expect(tester.takeException(), isNull);
+    controller.dispose();
+  });
+
+  testWidgets('QA button stays inside safe bounds and preserves its position', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    tester.view.padding = const FakeViewPadding(top: 44, bottom: 34);
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+      tester.view.resetPadding();
+    });
+    final controller = _controller();
+    await tester.pumpWidget(_host(controller));
+    final button = find.byKey(const Key('qa-inspector-button'));
+
+    await tester.drag(button, const Offset(-1000, -1000));
+    await tester.pumpAndSettle();
+    final clamped = tester.getRect(button);
+    expect(clamped.left, 16);
+    expect(clamped.top, 60);
+    expect(clamped.right, lessThanOrEqualTo(374));
+
+    await tester.tap(button);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('qa-inspector-close')));
+    await tester.pumpAndSettle();
+    expect(tester.getRect(button).topLeft, clamped.topLeft);
+    controller.dispose();
+  });
+
+  testWidgets('QA button re-clamps after the viewport becomes smaller', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(800, 1000);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+    final controller = _controller();
+    await tester.pumpWidget(_host(controller));
+    final button = find.byKey(const Key('qa-inspector-button'));
+    await tester.drag(button, const Offset(0, -300));
+    await tester.pumpAndSettle();
+
+    tester.view.physicalSize = const Size(320, 480);
+    await tester.pumpAndSettle();
+
+    final rect = tester.getRect(button);
+    expect(rect.left, greaterThanOrEqualTo(16));
+    expect(rect.right, lessThanOrEqualTo(304));
+    expect(rect.top, greaterThanOrEqualTo(16));
+    expect(rect.bottom, lessThanOrEqualTo(464));
+    expect(tester.takeException(), isNull);
+    controller.dispose();
+  });
+
   testWidgets('message follows locale and remains stable during updates', (tester) async {
     final controller = _controller();
     await tester.pumpWidget(_localizedHost(controller, const Locale('ar')));
