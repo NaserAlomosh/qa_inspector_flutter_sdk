@@ -26,6 +26,98 @@ void main() {
     controller.dispose();
   });
 
+  testWidgets('builder integration uses device safe area without exceptions', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1179, 2556);
+    tester.view.devicePixelRatio = 3;
+    tester.view.padding = const FakeViewPadding(bottom: 102);
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+      tester.view.resetPadding();
+    });
+    final controller = _controller();
+
+    await tester.pumpWidget(_host(controller));
+    await tester.pump();
+
+    expect(find.byKey(const Key('host')), findsOneWidget);
+    expect(find.byKey(const Key('qa-inspector-button')), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    final buttonBottom = tester.getBottomLeft(
+      find.byKey(const Key('qa-inspector-button')),
+    ).dy;
+    expect(buttonBottom, lessThanOrEqualTo(806));
+    controller.dispose();
+  });
+
+  testWidgets('closing inspector restores host interaction', (tester) async {
+    final controller = _controller();
+    var hostTaps = 0;
+    await tester.pumpWidget(
+      _host(
+        controller,
+        host: TextButton(
+          key: const Key('host-action'),
+          onPressed: () => hostTaps++,
+          child: const Text('Host action'),
+        ),
+      ),
+    );
+
+    await tester.tap(find.byKey(const Key('qa-inspector-button')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('host-action')), findsOneWidget);
+    await tester.tap(find.byKey(const Key('qa-inspector-close')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('host-action')));
+
+    expect(hostTaps, 1);
+    expect(tester.takeException(), isNull);
+    controller.dispose();
+  });
+
+  testWidgets('inspector routes and dialogs stay off the host navigator', (
+    tester,
+  ) async {
+    final controller = _controller();
+    final observer = _CountingNavigatorObserver();
+    await tester.pumpWidget(_host(controller, observer: observer));
+    final initialEvents = observer.events;
+
+    await tester.tap(find.byKey(const Key('qa-inspector-button')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('qa-clear-session')));
+    await tester.pumpAndSettle();
+    expect(find.text('Clear current QA session?'), findsOneWidget);
+    await tester.tap(find.text('Cancel'));
+    await tester.pumpAndSettle();
+
+    expect(observer.events, initialEvents);
+    expect(tester.takeException(), isNull);
+    controller.dispose();
+  });
+
+  testWidgets('host navigator observer still receives host navigation', (
+    tester,
+  ) async {
+    final controller = _controller();
+    final observer = _CountingNavigatorObserver();
+    await tester.pumpWidget(
+      _host(controller, observer: observer, host: const _NavigationHost()),
+    );
+    final initialEvents = observer.events;
+
+    await tester.tap(find.byKey(const Key('host-navigation')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Host destination'), findsOneWidget);
+    expect(observer.events, initialEvents + 1);
+    expect(tester.takeException(), isNull);
+    controller.dispose();
+  });
+
   testWidgets('opens and closes repeatedly without duplicate buttons', (tester) async {
     final controller = _controller();
     await tester.pumpWidget(_host(controller));
@@ -35,6 +127,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byKey(const Key('qa-inspector-overlay')), findsOneWidget);
       expect(find.byKey(const Key('qa-inspector-button')), findsNothing);
+      expect(tester.takeException(), isNull);
 
       await tester.tap(find.byKey(const Key('qa-inspector-close')));
       await tester.pumpAndSettle();
@@ -290,13 +383,7 @@ void main() {
     final controller = _controller();
     _addRoute(controller, id: 'export-route', from: null, to: '/export');
     final observer = _CountingNavigatorObserver();
-    await tester.pumpWidget(MaterialApp(
-      navigatorObservers: <NavigatorObserver>[observer],
-      home: QaInspector(
-        controller: controller,
-        child: const Scaffold(body: Text('Host child', key: Key('host'))),
-      ),
-    ));
+    await tester.pumpWidget(_host(controller, observer: observer));
     await tester.tap(find.byKey(const Key('qa-inspector-button')));
     await tester.pumpAndSettle();
     final routeEvents = observer.events;
@@ -336,19 +423,46 @@ QaInspectorController _controller() => QaInspectorController(
   config: const QaInspectorConfig(enabled: true),
 );
 
-Widget _host(QaInspectorController controller) => QaInspector(
-  controller: controller,
-  child: const MaterialApp(home: Scaffold(body: Text('Host child', key: Key('host')))),
-);
+Widget _host(
+  QaInspectorController controller, {
+  NavigatorObserver? observer,
+  Widget host = const Text('Host child', key: Key('host')),
+}) =>
+    MaterialApp(
+      navigatorObservers: <NavigatorObserver>[
+        if (observer != null) observer,
+      ],
+      home: Scaffold(body: Center(child: host)),
+      builder: (context, child) => QaInspector(
+        controller: controller,
+        child: child ?? const SizedBox.shrink(),
+      ),
+    );
 
 Widget _openHost(QaInspectorController controller) => MaterialApp(
-  home: Builder(
-    builder: (context) => QaInspector(
-      controller: controller,
-      child: const Scaffold(body: Text('Host child', key: Key('host'))),
-    ),
+  home: const Scaffold(body: Text('Host child', key: Key('host'))),
+  builder: (context, child) => QaInspector(
+    controller: controller,
+    child: child ?? const SizedBox.shrink(),
   ),
 );
+
+class _NavigationHost extends StatelessWidget {
+  const _NavigationHost();
+
+  @override
+  Widget build(BuildContext context) {
+    return TextButton(
+      key: const Key('host-navigation'),
+      onPressed: () => Navigator.of(context).push<void>(
+        MaterialPageRoute<void>(
+          builder: (_) => const Scaffold(body: Text('Host destination')),
+        ),
+      ),
+      child: const Text('Navigate'),
+    );
+  }
+}
 
 void _addRoute(
   QaInspectorController controller, {
