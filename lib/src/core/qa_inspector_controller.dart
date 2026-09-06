@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 import '../events/qa_event.dart';
 import '../events/qa_route_event.dart';
 import 'qa_inspector_config.dart';
@@ -16,10 +18,39 @@ final class QaInspectorController {
   final QaInspectorConfig config;
 
   final QaInspectorRuntime _runtime;
+  _QaControllerChanges? _changeNotifications;
   bool _isDisposed = false;
+  String _notes = '';
+
+  /// Maximum number of characters retained in session notes.
+  static const int maxNotesLength = 5000;
 
   /// A stable, immutable snapshot of captured events.
   List<QaEvent> get events => _runtime.timeline.snapshot();
+
+  /// Read-only notifications for event and session-note changes.
+  ///
+  /// Consumers should request a fresh [events] snapshot when notified.
+  Listenable get changes =>
+      _changeNotifications ??= _QaControllerChanges(_runtime);
+
+  /// Notes retained in memory for the current QA session.
+  String get notes => _notes;
+
+  /// Replaces the current session notes, bounded by [maxNotesLength].
+  void updateNotes(String value) {
+    if (!config.enabled || _isDisposed) {
+      return;
+    }
+    final bounded = value.length <= maxNotesLength
+        ? value
+        : value.substring(0, maxNotesLength);
+    if (_notes == bounded) {
+      return;
+    }
+    _notes = bounded;
+    _changeNotifications?.notifySessionChanged();
+  }
 
   /// The current lightweight route name, or `null` before one is observed.
   String? get currentRoute => _runtime.routeContext.currentRoute;
@@ -34,6 +65,16 @@ final class QaInspectorController {
     if (!_isDisposed) {
       _runtime.clearEvents();
     }
+  }
+
+  /// Clears captured events and notes and advances the session generation.
+  void clearSession() {
+    if (!config.enabled || _isDisposed) {
+      return;
+    }
+    _notes = '';
+    _runtime.clearEvents();
+    _changeNotifications?.notifySessionChanged();
   }
 
   /// Publishes a collector event if its originating session is still current.
@@ -61,6 +102,7 @@ final class QaInspectorController {
     }
 
     _isDisposed = true;
+    _changeNotifications?.dispose();
     _runtime.dispose();
   }
 
@@ -86,5 +128,45 @@ final class QaInspectorController {
         currentRoute: currentRoute,
       ),
     );
+  }
+}
+
+final class _QaControllerChanges extends ChangeNotifier {
+  _QaControllerChanges(this._runtime);
+
+  final QaInspectorRuntime _runtime;
+  bool _listeningToTimeline = false;
+  int _listenerCount = 0;
+
+  @override
+  void addListener(VoidCallback listener) {
+    if (!_listeningToTimeline) {
+      _runtime.timeline.addListener(notifyListeners);
+      _listeningToTimeline = true;
+    }
+    super.addListener(listener);
+    _listenerCount++;
+  }
+
+  @override
+  void removeListener(VoidCallback listener) {
+    super.removeListener(listener);
+    if (_listenerCount > 0) {
+      _listenerCount--;
+    }
+    if (_listenerCount == 0 && _listeningToTimeline) {
+      _runtime.timeline.removeListener(notifyListeners);
+      _listeningToTimeline = false;
+    }
+  }
+
+  void notifySessionChanged() => notifyListeners();
+
+  @override
+  void dispose() {
+    if (_listeningToTimeline) {
+      _runtime.timeline.removeListener(notifyListeners);
+    }
+    super.dispose();
   }
 }
