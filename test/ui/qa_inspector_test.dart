@@ -246,6 +246,46 @@ void main() {
     controller.dispose();
   });
 
+  testWidgets('report actions copy a stable sanitized step report', (tester) async {
+    final controller = _controller();
+    _addRoute(controller, id: 'report-route', from: null, to: '/transfer');
+    _addNetwork(controller, id: 'report-api', path: '/validate');
+    controller.updateNotes('Validation issue');
+    String? copied;
+    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+      SystemChannels.platform,
+      (call) async {
+        if (call.method == 'Clipboard.setData') {
+          copied = (call.arguments as Map<Object?, Object?>)['text'] as String?;
+          controller.clearSession();
+          _addNetwork(controller, id: 'new-session', path: '/new');
+        }
+        return null;
+      },
+    );
+
+    await tester.pumpWidget(_openHost(controller));
+    await tester.tap(find.byKey(const Key('qa-inspector-button')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('qa-report-actions')));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('qa-copy-report')), findsOneWidget);
+    expect(find.byKey(const Key('qa-export-png')), findsOneWidget);
+    await tester.tap(find.byKey(const Key('qa-copy-report')));
+    await tester.pumpAndSettle();
+
+    expect(copied, contains('QA REPORT'));
+    expect(copied, contains('STEP 1'));
+    expect(copied, contains('Validation issue'));
+    expect(copied, contains('POST /validate'));
+    expect(copied, contains('"password": "***"'));
+    expect(copied, isNot(contains('raw-secret')));
+    expect(copied, isNot(contains('/new')));
+    expect(find.text('QA report copied.'), findsOneWidget);
+    controller.dispose();
+  });
+
   testWidgets('bounded large timeline renders lazily without errors', (tester) async {
     final controller = QaInspectorController(config: const QaInspectorConfig(enabled: true, maxEvents: 200));
     for (var index = 0; index < 250; index++) {
