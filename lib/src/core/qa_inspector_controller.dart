@@ -24,12 +24,35 @@ final class QaInspectorController {
   /// The current lightweight route name, or `null` before one is observed.
   String? get currentRoute => _runtime.routeContext.currentRoute;
 
+  /// Identifies the current in-memory inspection session.
+  ///
+  /// Collectors use this value to discard work that began before [clearEvents].
+  int get sessionGeneration => _runtime.sessionGeneration;
+
   /// Removes all currently captured events.
   void clearEvents() {
     if (!_isDisposed) {
-      _runtime.timeline.clear();
+      _runtime.clearEvents();
     }
   }
+
+  /// Publishes a collector event if its originating session is still current.
+  ///
+  /// This is intended for asynchronous SDK collectors. Host applications should
+  /// not need to call it directly.
+  void recordEvent(QaEvent event, {required int sessionGeneration}) {
+    if (!config.enabled ||
+        _isDisposed ||
+        sessionGeneration != _runtime.sessionGeneration) {
+      return;
+    }
+    _runtime.publish(event);
+  }
+
+  /// Creates an identifier in the shared runtime event sequence.
+  ///
+  /// This is intended for SDK collectors.
+  String nextEventId() => _runtime.nextEventId();
 
   /// Releases runtime resources. Calling this more than once is safe.
   void dispose() {

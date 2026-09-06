@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:qa_inspector/qa_inspector.dart';
 
@@ -21,9 +22,18 @@ class _ExampleBootstrapState extends State<ExampleBootstrap> {
   late final QaRouteObserver _routeObserver = QaRouteObserver(
     controller: _qaController,
   );
+  late final Dio _dio;
+
+  @override
+  void initState() {
+    super.initState();
+    _dio = Dio()
+      ..interceptors.add(QaNetworkInterceptor(controller: _qaController));
+  }
 
   @override
   void dispose() {
+    _dio.close(force: true);
     _qaController.dispose();
     super.dispose();
   }
