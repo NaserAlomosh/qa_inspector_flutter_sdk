@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 
 import '../core/qa_inspector_controller.dart';
@@ -252,8 +251,9 @@ class _InspectorState extends State<_Inspector> {
         await Clipboard.setData(ClipboardData(text: bounded));
         if (context.mounted) _showMessage(context, 'QA report copied.');
       } catch (_) {
-        if (context.mounted)
+        if (context.mounted) {
           _showMessage(context, 'The QA report could not be copied.');
+        }
       }
       return;
     }
@@ -267,18 +267,20 @@ class _InspectorState extends State<_Inspector> {
       try {
         result = await exporter(context, data);
       } catch (_) {
-        if (context.mounted)
+        if (context.mounted) {
           _showMessage(context, 'The PNG report could not be generated.');
+        }
         return;
       }
       final bytes = result.bytes;
       final filename = result.filename;
       if (bytes == null || filename == null) {
-        if (context.mounted)
+        if (context.mounted) {
           _showMessage(
             context,
             result.errorMessage ?? 'The PNG report could not be generated.',
           );
+        }
         return;
       }
       if (!context.mounted) return;
@@ -294,8 +296,9 @@ class _InspectorState extends State<_Inspector> {
           sharePositionOrigin: origin,
         );
       } catch (_) {
-        if (context.mounted)
+        if (context.mounted) {
           _showMessage(context, 'The report could not be shared.');
+        }
         return;
       }
       if (!context.mounted || shareResult.isSuccess) return;
@@ -334,7 +337,10 @@ class _InspectorState extends State<_Inspector> {
             key: const Key('qa-confirm-clear'),
             style: FilledButton.styleFrom(backgroundColor: QaColors.failure),
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Clear Session'),
+            child: const Text(
+              'Clear Session',
+              style: TextStyle(color: Colors.white),
+            ),
           ),
         ],
       ),

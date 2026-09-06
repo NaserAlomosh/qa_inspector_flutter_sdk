@@ -641,7 +641,7 @@ Widget _host(
 }) =>
     MaterialApp(
       navigatorObservers: <NavigatorObserver>[
-        if (observer != null) observer,
+        ?observer,
       ],
       home: Scaffold(body: Center(child: host)),
       builder: (context, child) => QaInspector(
