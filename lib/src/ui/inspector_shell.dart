@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../core/qa_inspector_controller.dart';
+import '../report/qa_report_builder.dart';
+import '../report/qa_report_image_exporter.dart';
+import '../report/qa_report_limits.dart';
+import '../report/qa_report_text_renderer.dart';
 import 'session_summary.dart';
 import 'tabs/apis_tab.dart';
 import 'tabs/notes_tab.dart';
@@ -58,6 +63,23 @@ class _Inspector extends StatelessWidget {
           ),
           title: const Text('QA Inspector'),
           actions: <Widget>[
+            PopupMenuButton<_ReportAction>(
+              key: const Key('qa-report-actions'),
+              tooltip: 'Report actions',
+              onSelected: (action) => _handleReportAction(context, action),
+              itemBuilder: (context) => const <PopupMenuEntry<_ReportAction>>[
+                PopupMenuItem(
+                  key: Key('qa-copy-report'),
+                  value: _ReportAction.copy,
+                  child: Text('Copy Report'),
+                ),
+                PopupMenuItem(
+                  key: Key('qa-export-png'),
+                  value: _ReportAction.exportPng,
+                  child: Text('Export PNG'),
+                ),
+              ],
+            ),
             IconButton(
               key: const Key('qa-clear-session'),
               tooltip: 'Clear session',
@@ -100,6 +122,48 @@ class _Inspector extends StatelessWidget {
     );
   }
 
+  Future<void> _handleReportAction(BuildContext context, _ReportAction action) async {
+    if (!controller.config.enabled) return;
+    const limits = QaReportLimits();
+    final events = controller.events;
+    final notes = controller.notes;
+    final currentRoute = controller.currentRoute;
+    final generatedAt = DateTime.now();
+    final data = const QaReportBuilder(limits: limits).build(
+      events: events,
+      notes: notes,
+      currentRoute: currentRoute,
+      generatedAt: generatedAt,
+    );
+    if (action == _ReportAction.copy) {
+      final bounded = const QaReportTextRenderer().renderForClipboard(
+        data,
+        maxCharacters: limits.maxClipboardCharacters,
+      );
+      try {
+        await Clipboard.setData(ClipboardData(text: bounded));
+        if (context.mounted) _showMessage(context, 'QA report copied.');
+      } catch (_) {
+        if (context.mounted) _showMessage(context, 'The QA report could not be copied.');
+      }
+      return;
+    }
+    final result = await const QaReportImageExporter(limits: limits).export(context, data);
+    if (!context.mounted) return;
+    _showMessage(
+      context,
+      result.isSuccess
+          ? 'PNG report generated: ${result.filename}'
+          : result.errorMessage ?? 'The PNG report could not be generated.',
+    );
+  }
+
+  void _showMessage(BuildContext context, String message) {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(message)));
+  }
+
   Future<void> _confirmClear(BuildContext context) async {
     final clear = await showDialog<bool>(
       context: context,
@@ -121,3 +185,5 @@ class _Inspector extends StatelessWidget {
     }
   }
 }
+
+enum _ReportAction { copy, exportPng }
