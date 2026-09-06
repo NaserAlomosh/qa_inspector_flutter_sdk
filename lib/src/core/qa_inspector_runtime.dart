@@ -14,8 +14,11 @@ final class QaInspectorRuntime {
   final QaRouteContext routeContext = QaRouteContext();
   final QaEventIdGenerator eventIdGenerator;
   bool _isDisposed = false;
+  int _sessionGeneration = 0;
 
   bool get isEnabled => config.enabled;
+
+  int get sessionGeneration => _sessionGeneration;
 
   String nextEventId() => eventIdGenerator.next();
 
@@ -25,6 +28,11 @@ final class QaInspectorRuntime {
     }
 
     timeline.add(event);
+  }
+
+  void clearEvents() {
+    _sessionGeneration++;
+    timeline.clear();
   }
 
   void dispose() {
