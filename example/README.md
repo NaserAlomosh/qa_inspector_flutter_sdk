@@ -1,5 +1,13 @@
 # qa_inspector_example
 
+Run the app with QA tools enabled:
+
+```sh
+flutter run --dart-define=QA_TOOLS=true
+```
+
+Generate navigation and network activity, open **QA Inspector**, add QA notes, then choose **Report → Export PNG**. The native share sheet lets you save the temporary PNG to Files on iOS or select an Android share target. Open the saved report to verify that it is readable and sensitive values remain masked.
+
 A new Flutter project.
 
 ## Getting Started

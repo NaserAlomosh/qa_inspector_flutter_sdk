@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 
 import '../core/qa_inspector_controller.dart';
 import '../report/qa_report_builder.dart';
+import '../report/qa_report_data.dart';
+import '../report/qa_report_file_sharer.dart';
 import '../report/qa_report_image_exporter.dart';
 import '../report/qa_report_limits.dart';
 import '../report/qa_report_text_renderer.dart';
@@ -15,11 +18,20 @@ import 'tabs/timeline_tab.dart';
 import 'theme/qa_colors.dart';
 import 'theme/qa_theme.dart';
 
+/// Generates a report image from an immutable report snapshot.
+typedef QaReportExporter = Future<QaReportExportResult> Function(BuildContext context, QaReportData data);
+
 /// Hosts the isolated full-screen inspector application.
 class InspectorShell extends StatefulWidget {
-  const InspectorShell({required this.controller, required this.onClose, super.key});
+  const InspectorShell({required this.controller, required this.onClose, this.reportSharer = const QaReportFileSharer(), this.reportExporter, super.key});
   final QaInspectorController controller;
   final VoidCallback onClose;
+
+  /// Delivers successful PNG exports through the platform share sheet.
+  final QaReportSharer reportSharer;
+
+  /// Overrides PNG generation in presentation tests.
+  final QaReportExporter? reportExporter;
 
   @override
   State<InspectorShell> createState() => _InspectorShellState();
@@ -41,17 +53,26 @@ class _InspectorShellState extends State<InspectorShell> {
         darkTheme: QaTheme.dark(),
         themeMode: _hostBrightness == Brightness.dark ? ThemeMode.dark : ThemeMode.light,
         builder: (context, child) => Directionality(textDirection: rtl ? TextDirection.rtl : TextDirection.ltr, child: child!),
-        home: _Inspector(controller: widget.controller, onClose: widget.onClose, message: _message),
+        home: _Inspector(controller: widget.controller, onClose: widget.onClose, message: _message, reportSharer: widget.reportSharer, reportExporter: widget.reportExporter),
       ),
     );
   }
 }
 
-class _Inspector extends StatelessWidget {
-  const _Inspector({required this.controller, required this.onClose, required this.message});
+class _Inspector extends StatefulWidget {
+  const _Inspector({required this.controller, required this.onClose, required this.message, required this.reportSharer, this.reportExporter});
   final QaInspectorController controller;
   final VoidCallback onClose;
   final String message;
+  final QaReportSharer reportSharer;
+  final QaReportExporter? reportExporter;
+
+  @override
+  State<_Inspector> createState() => _InspectorState();
+}
+
+class _InspectorState extends State<_Inspector> {
+  bool _isExportingPng = false;
 
   @override
   Widget build(BuildContext context) => DefaultTabController(
@@ -60,7 +81,7 @@ class _Inspector extends StatelessWidget {
       key: const Key('qa-inspector-overlay'),
       resizeToAvoidBottomInset: true,
       appBar: AppBar(
-        leading: IconButton(key: const Key('qa-inspector-close'), onPressed: onClose, icon: const Icon(Icons.close), semanticLabel: 'Close inspector'),
+        leading: IconButton(key: const Key('qa-inspector-close'), onPressed: widget.onClose, icon: const Icon(Icons.close), semanticLabel: 'Close inspector'),
         titleSpacing: 4,
         title: Column(crossAxisAlignment: CrossAxisAlignment.start, children: <Widget>[
           const Text('QA Inspector'),
@@ -75,9 +96,9 @@ class _Inspector extends StatelessWidget {
             key: const Key('qa-report-actions'),
             tooltip: 'Report actions',
             onSelected: (action) => _handleReportAction(context, action),
-            itemBuilder: (context) => const <PopupMenuEntry<_ReportAction>>[
-              PopupMenuItem(key: Key('qa-copy-report'), value: _ReportAction.copy, child: ListTile(leading: Icon(Icons.copy_outlined), title: Text('Copy Report'))),
-              PopupMenuItem(key: Key('qa-export-png'), value: _ReportAction.exportPng, child: ListTile(leading: Icon(Icons.image_outlined), title: Text('Export PNG'))),
+            itemBuilder: (context) => <PopupMenuEntry<_ReportAction>>[
+              const PopupMenuItem(key: Key('qa-copy-report'), value: _ReportAction.copy, child: ListTile(leading: Icon(Icons.copy_outlined), title: Text('Copy Report'))),
+              PopupMenuItem(key: Key('qa-export-png'), value: _ReportAction.exportPng, enabled: !_isExportingPng, child: const ListTile(leading: Icon(Icons.image_outlined), title: Text('Export PNG'))),
             ],
             child: const Padding(padding: EdgeInsets.symmetric(horizontal: 10), child: Row(children: <Widget>[Icon(Icons.ios_share_outlined, size: 19), SizedBox(width: 4), Text('Report')])),
           ),
@@ -94,18 +115,18 @@ class _Inspector extends StatelessWidget {
         ),
       ),
       body: AnimatedBuilder(
-        animation: controller.changes,
+        animation: widget.controller.changes,
         builder: (context, _) {
-          final events = controller.events;
+          final events = widget.controller.events;
           return Column(children: <Widget>[
-            SessionSummary(events: events, currentRoute: controller.currentRoute),
-            QaSessionMessage(message: message),
+            SessionSummary(events: events, currentRoute: widget.controller.currentRoute),
+            QaSessionMessage(message: widget.message),
             const SizedBox(height: 6),
             Expanded(child: TabBarView(children: <Widget>[
               TimelineTab(events: events),
               ApisTab(events: events),
               RoutesTab(events: events),
-              NotesTab(controller: controller),
+              NotesTab(controller: widget.controller),
             ])),
           ]);
         },
@@ -114,9 +135,9 @@ class _Inspector extends StatelessWidget {
   );
 
   Future<void> _handleReportAction(BuildContext context, _ReportAction action) async {
-    if (!controller.config.enabled) return;
+    if (!widget.controller.config.enabled) return;
     const limits = QaReportLimits();
-    final data = const QaReportBuilder(limits: limits).build(events: controller.events, notes: controller.notes, currentRoute: controller.currentRoute, generatedAt: DateTime.now());
+    final data = const QaReportBuilder(limits: limits).build(events: widget.controller.events, notes: widget.controller.notes, currentRoute: widget.controller.currentRoute, generatedAt: DateTime.now());
     if (action == _ReportAction.copy) {
       final bounded = const QaReportTextRenderer().renderForClipboard(data, maxCharacters: limits.maxClipboardCharacters);
       try {
@@ -127,8 +148,44 @@ class _Inspector extends StatelessWidget {
       }
       return;
     }
-    final result = await const QaReportImageExporter(limits: limits).export(context, data);
-    if (context.mounted) _showMessage(context, result.isSuccess ? 'PNG report generated: ${result.filename}' : result.errorMessage ?? 'The PNG report could not be generated.');
+    if (_isExportingPng) return;
+    setState(() => _isExportingPng = true);
+    try {
+      final exporter = widget.reportExporter ?? const QaReportImageExporter(limits: limits).export;
+      late final QaReportExportResult result;
+      try {
+        result = await exporter(context, data);
+      } catch (_) {
+        if (context.mounted) _showMessage(context, 'The PNG report could not be generated.');
+        return;
+      }
+      final bytes = result.bytes;
+      final filename = result.filename;
+      if (bytes == null || filename == null) {
+        if (context.mounted) _showMessage(context, result.errorMessage ?? 'The PNG report could not be generated.');
+        return;
+      }
+      if (!context.mounted) return;
+      final renderObject = context.findRenderObject();
+      final origin = renderObject is RenderBox && renderObject.hasSize
+          ? renderObject.localToGlobal(Offset.zero) & renderObject.size
+          : const Rect.fromLTWH(0, 0, 1, 1);
+      late final QaReportShareResult shareResult;
+      try {
+        shareResult = await widget.reportSharer.share(bytes: bytes, filename: filename, sharePositionOrigin: origin);
+      } catch (_) {
+        if (context.mounted) _showMessage(context, 'The report could not be shared.');
+        return;
+      }
+      if (!context.mounted || shareResult.isSuccess) return;
+      final message = switch (shareResult.status) {
+        QaReportShareStatus.preparationFailed || QaReportShareStatus.writeFailed => 'The report file could not be prepared.',
+        _ => 'The report could not be shared.',
+      };
+      _showMessage(context, message);
+    } finally {
+      if (mounted) setState(() => _isExportingPng = false);
+    }
   }
 
   void _showMessage(BuildContext context, String message) {
@@ -144,7 +201,7 @@ class _Inspector extends StatelessWidget {
         FilledButton(key: const Key('qa-confirm-clear'), style: FilledButton.styleFrom(backgroundColor: QaColors.failure), onPressed: () => Navigator.pop(context, true), child: const Text('Clear Session')),
       ],
     ));
-    if (clear == true) controller.clearSession();
+    if (clear == true) widget.controller.clearSession();
   }
 }
 

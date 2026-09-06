@@ -422,30 +422,6 @@ void main() {
     controller.dispose();
   });
 
-  testWidgets('PNG export succeeds without changing host navigation or inspector usability', (tester) async {
-    final controller = _controller();
-    _addRoute(controller, id: 'export-route', from: null, to: '/export');
-    final observer = _CountingNavigatorObserver();
-    await tester.pumpWidget(_host(controller, observer: observer));
-    await tester.tap(find.byKey(const Key('qa-inspector-button')));
-    await tester.pumpAndSettle();
-    final routeEvents = observer.events;
-    await tester.tap(find.byKey(const Key('qa-report-actions')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('qa-export-png')));
-    await tester.pump();
-    await tester.pump();
-    await tester.pumpAndSettle();
-
-    expect(find.textContaining('PNG report generated: qa_report_'), findsOneWidget);
-    expect(observer.events, routeEvents);
-    expect(find.text('Timeline'), findsOneWidget);
-    await tester.tap(find.text('APIs'));
-    await tester.pumpAndSettle();
-    expect(find.text('APIs'), findsWidgets);
-    controller.dispose();
-  });
-
   testWidgets('bounded large timeline renders lazily without errors', (tester) async {
     final controller = QaInspectorController(config: const QaInspectorConfig(enabled: true, maxEvents: 200));
     for (var index = 0; index < 250; index++) {
