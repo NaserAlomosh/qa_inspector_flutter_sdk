@@ -95,7 +95,13 @@ class _DetailSection extends StatelessWidget {
   final String? copyValue;
 
   @override
-  Widget build(BuildContext context) => Card(
+  Widget build(BuildContext context) => Container(
+    margin: const EdgeInsets.only(bottom: 12),
+    decoration: BoxDecoration(
+      color: Theme.of(context).colorScheme.surface,
+      borderRadius: BorderRadius.circular(12),
+      border: Border.all(color: Theme.of(context).dividerColor),
+    ),
     child: Padding(
       padding: const EdgeInsets.all(12),
       child: Column(
@@ -113,7 +119,17 @@ class _DetailSection extends StatelessWidget {
                 ),
             ],
           ),
-          SelectableText(value),
+          Directionality(
+            textDirection: TextDirection.ltr,
+            child: SelectableText(
+              value,
+              style: const TextStyle(
+                fontFamily: 'monospace',
+                fontSize: 12,
+                height: 1.45,
+              ),
+            ),
+          ),
         ],
       ),
     ),

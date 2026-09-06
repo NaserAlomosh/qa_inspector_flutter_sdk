@@ -15,6 +15,49 @@ void main() {
     controller.dispose();
   });
 
+  testWidgets('QA button uses semantics without a Tooltip', (tester) async {
+    final controller = _controller();
+    final semantics = tester.ensureSemantics();
+    await tester.pumpWidget(_host(controller));
+
+    expect(find.byType(Tooltip), findsNothing);
+    expect(find.bySemanticsLabel('Open QA Inspector'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    semantics.dispose();
+    controller.dispose();
+  });
+
+  testWidgets('message follows locale and remains stable during updates', (tester) async {
+    final controller = _controller();
+    await tester.pumpWidget(_localizedHost(controller, const Locale('ar')));
+    await tester.tap(find.byKey(const Key('qa-inspector-button')));
+    await tester.pumpAndSettle();
+
+    final initial = tester.widget<Text>(find.descendant(of: find.byKey(const Key('qa-session-message')), matching: find.byType(Text))).data;
+    expect(initial, matches(RegExp(r'[\u0600-\u06FF]')));
+    _addNetwork(controller, id: 'stable', path: '/stable');
+    await tester.pump();
+    await tester.tap(find.text('Notes'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const Key('qa-notes-field')), 'خطوات الاختبار');
+    await tester.pump();
+    final after = tester.widget<Text>(find.descendant(of: find.byKey(const Key('qa-session-message')), matching: find.byType(Text))).data;
+    expect(after, initial);
+    expect(tester.takeException(), isNull);
+    controller.dispose();
+  });
+
+  testWidgets('dark host brightness selects the dark inspector theme', (tester) async {
+    final controller = _controller();
+    await tester.pumpWidget(MaterialApp(theme: ThemeData.dark(), home: QaInspector(controller: controller, child: const SizedBox())));
+    await tester.tap(find.byKey(const Key('qa-inspector-button')));
+    await tester.pumpAndSettle();
+
+    final context = tester.element(find.byKey(const Key('qa-inspector-overlay')));
+    expect(Theme.of(context).brightness, Brightness.dark);
+    controller.dispose();
+  });
+
   testWidgets('enabled inspector has one button and keeps host visible', (tester) async {
     final controller = _controller();
 
@@ -90,7 +133,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('qa-clear-session')));
     await tester.pumpAndSettle();
-    expect(find.text('Clear current QA session?'), findsOneWidget);
+    expect(find.text('Clear QA session?'), findsOneWidget);
     await tester.tap(find.text('Cancel'));
     await tester.pumpAndSettle();
 
@@ -281,7 +324,7 @@ void main() {
 
     await tester.tap(find.byKey(const Key('qa-clear-session')));
     await tester.pumpAndSettle();
-    expect(find.text('Clear current QA session?'), findsOneWidget);
+    expect(find.text('Clear QA session?'), findsOneWidget);
     expect(controller.events, isNotEmpty);
     await tester.tap(find.byKey(const Key('qa-confirm-clear')));
     await tester.pumpAndSettle();
@@ -289,7 +332,7 @@ void main() {
     expect(controller.events, isEmpty);
     expect(controller.notes, isEmpty);
     expect(controller.sessionGeneration, generation + 1);
-    expect(find.text('No timeline events yet'), findsOneWidget);
+    expect(find.text('No events yet'), findsOneWidget);
 
     _addRoute(controller, id: 'after');
     await tester.pump();
@@ -414,7 +457,7 @@ void main() {
 
     expect(controller.events, hasLength(200));
     expect(tester.takeException(), isNull);
-    expect(find.byType(ListTile), findsWidgets);
+    expect(find.byKey(const Key('qa-timeline-list')), findsOneWidget);
     controller.dispose();
   });
 }
@@ -567,3 +610,14 @@ class _BuildCounter extends StatelessWidget {
     return const MaterialApp(home: Scaffold(body: Text('Host child')));
   }
 }
+
+Widget _localizedHost(QaInspectorController controller, Locale locale) =>
+    MaterialApp(
+      home: Builder(
+        builder: (context) => Localizations.override(
+          context: context,
+          locale: locale,
+          child: QaInspector(controller: controller, child: const Scaffold()),
+        ),
+      ),
+    );
