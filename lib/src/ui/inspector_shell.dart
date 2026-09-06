@@ -16,6 +16,7 @@ import 'tabs/notes_tab.dart';
 import 'tabs/routes_tab.dart';
 import 'tabs/timeline_tab.dart';
 import 'theme/qa_colors.dart';
+import 'theme/qa_inspector_theme_mode.dart';
 import 'theme/qa_theme.dart';
 
 /// Generates a report image from an immutable report snapshot.
@@ -30,12 +31,14 @@ class InspectorShell extends StatefulWidget {
   const InspectorShell({
     required this.controller,
     required this.onClose,
+    this.themeMode = QaInspectorThemeMode.dark,
     this.reportSharer = const QaReportFileSharer(),
     this.reportExporter,
     super.key,
   });
   final QaInspectorController controller;
   final VoidCallback onClose;
+  final QaInspectorThemeMode themeMode;
 
   /// Delivers successful PNG exports through the platform share sheet.
   final QaReportSharer reportSharer;
@@ -49,7 +52,6 @@ class InspectorShell extends StatefulWidget {
 
 class _InspectorShellState extends State<InspectorShell> {
   late final Locale? _hostLocale = Localizations.maybeLocaleOf(context);
-  late final Brightness _hostBrightness = Theme.of(context).brightness;
   late final String _message = selectQaMessage(_hostLocale);
 
   @override
@@ -59,11 +61,7 @@ class _InspectorShellState extends State<InspectorShell> {
       data: MediaQueryData.fromView(View.of(context)),
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
-        theme: QaTheme.light(),
-        darkTheme: QaTheme.dark(),
-        themeMode: _hostBrightness == Brightness.dark
-            ? ThemeMode.dark
-            : ThemeMode.light,
+        theme: QaTheme.resolve(widget.themeMode),
         builder: (context, child) => Directionality(
           textDirection: rtl ? TextDirection.rtl : TextDirection.ltr,
           child: child!,
