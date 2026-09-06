@@ -75,11 +75,17 @@ class _QaEntryButton extends StatelessWidget {
         textDirection: TextDirection.ltr,
         child: Theme(
           data: ThemeData(colorSchemeSeed: Colors.deepPurple),
-          child: FloatingActionButton.small(
-            key: const Key('qa-inspector-button'),
-            tooltip: 'Open QA Inspector',
-            onPressed: onPressed,
-            child: const Text('QA', style: TextStyle(fontWeight: FontWeight.bold)),
+          child: Material(
+            type: MaterialType.transparency,
+            child: FloatingActionButton.small(
+              key: const Key('qa-inspector-button'),
+              tooltip: 'Open QA Inspector',
+              onPressed: onPressed,
+              child: const Text(
+                'QA',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ),
           ),
         ),
       ),

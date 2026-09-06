@@ -30,12 +30,13 @@ final qaController = QaInspectorController(
   config: const QaInspectorConfig(enabled: true),
 );
 
-QaInspector(
-  controller: qaController,
-  child: MaterialApp(
-    navigatorObservers: [
-      QaRouteObserver(controller: qaController),
-    ],
+MaterialApp(
+  navigatorObservers: [
+    QaRouteObserver(controller: qaController),
+  ],
+  builder: (context, child) => QaInspector(
+    controller: qaController,
+    child: child ?? const SizedBox.shrink(),
   ),
 );
 ```
