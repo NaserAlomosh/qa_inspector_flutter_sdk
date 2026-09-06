@@ -16,7 +16,7 @@ class RoutesTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final routes = events.whereType<QaRouteEvent>().toList(growable: false);
-    if (routes.isEmpty) return const EmptyState('No route events yet');
+    if (routes.isEmpty) return const EmptyState('No navigation captured yet.', icon: Icons.alt_route);
     return ListView.builder(
       key: const Key('qa-route-list'),
       itemCount: routes.length,

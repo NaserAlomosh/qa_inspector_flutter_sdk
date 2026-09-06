@@ -102,7 +102,7 @@ class _ApisTabState extends State<ApisTab> with AutomaticKeepAliveClientMixin {
           ),
         Expanded(
           child: visible.isEmpty
-              ? const EmptyState('No APIs match the current filters')
+              ? EmptyState(allApis.isEmpty ? 'No API calls captured' : 'No APIs match the current filters', message: allApis.isEmpty ? 'Network requests will appear as you navigate.' : 'Try changing the search or filters.', icon: Icons.http)
               : ListView.builder(
                   key: const Key('qa-api-list'),
                   itemCount: visible.length,
