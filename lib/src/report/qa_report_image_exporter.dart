@@ -56,19 +56,25 @@ final class QaReportImageExporter {
     final key = GlobalKey();
     late OverlayEntry entry;
     entry = OverlayEntry(
-      builder: (_) => Positioned(
+      builder: (overlayContext) => Positioned(
         left: 0,
         top: 0,
         width: limits.maxImageWidth,
-        child: IgnorePointer(
-          child: UnconstrainedBox(
-            constrainedAxis: Axis.horizontal,
-            alignment: Alignment.topCenter,
-            child: Material(
-              color: Colors.transparent,
-              child: RepaintBoundary(
-                key: key,
-                child: QaReportWidget(data: data),
+        child: Transform.translate(
+          offset: Offset(
+            MediaQuery.sizeOf(overlayContext).width + limits.maxImageWidth,
+            0,
+          ),
+          child: IgnorePointer(
+            child: UnconstrainedBox(
+              constrainedAxis: Axis.horizontal,
+              alignment: Alignment.topCenter,
+              child: Material(
+                color: Colors.transparent,
+                child: RepaintBoundary(
+                  key: key,
+                  child: QaReportWidget(data: data),
+                ),
               ),
             ),
           ),
