@@ -38,36 +38,92 @@ class _ApisTabState extends State<ApisTab> with AutomaticKeepAliveClientMixin {
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    final allApis = widget.events.whereType<QaNetworkEvent>().toList(growable: false);
-    final routes = <String>{for (final api in allApis) formatRoute(api.route)}.toList()..sort();
+    final allApis = widget.events.whereType<QaNetworkEvent>().toList(
+      growable: false,
+    );
+    final routes = <String>{
+      for (final api in allApis) formatRoute(api.route),
+    }.toList()..sort();
     final query = _searchController.text.trim().toLowerCase();
-    final visible = allApis.where((api) {
-      final matchesFilter = switch (_filter) {
-        _ApiFilter.all => true,
-        _ApiFilter.success => api.outcome == QaNetworkOutcome.success,
-        _ApiFilter.failed => api.outcome == QaNetworkOutcome.failure,
-        _ApiFilter.cancelled => api.outcome == QaNetworkOutcome.cancelled,
-      };
-      final matchesSearch = query.isEmpty ||
-          api.url.toLowerCase().contains(query) ||
-          api.path.toLowerCase().contains(query) ||
-          api.method.toLowerCase().contains(query);
-      return matchesFilter && matchesSearch &&
-          (_selectedRoute == null || formatRoute(api.route) == _selectedRoute);
-    }).toList(growable: false);
+    final visible = allApis
+        .where((api) {
+          final matchesFilter = switch (_filter) {
+            _ApiFilter.all => true,
+            _ApiFilter.success => api.outcome == QaNetworkOutcome.success,
+            _ApiFilter.failed => api.outcome == QaNetworkOutcome.failure,
+            _ApiFilter.cancelled => api.outcome == QaNetworkOutcome.cancelled,
+          };
+          final matchesSearch =
+              query.isEmpty ||
+              api.url.toLowerCase().contains(query) ||
+              api.path.toLowerCase().contains(query) ||
+              api.method.toLowerCase().contains(query);
+          return matchesFilter &&
+              matchesSearch &&
+              (_selectedRoute == null ||
+                  formatRoute(api.route) == _selectedRoute);
+        })
+        .toList(growable: false);
 
     return Column(
       children: <Widget>[
         Padding(
-          padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+          padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
           child: TextField(
             key: const Key('qa-api-search'),
             controller: _searchController,
             onChanged: (_) => setState(() {}),
-            decoration: const InputDecoration(
-              prefixIcon: Icon(Icons.search),
-              labelText: 'Search URL, path, or method',
-              border: OutlineInputBorder(),
+            textInputAction: TextInputAction.search,
+            decoration: InputDecoration(
+              hintText: 'Search URL, path, or method',
+              hintStyle: TextStyle(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                fontSize: 14,
+              ),
+              prefixIcon: Icon(
+                Icons.search_rounded,
+                size: 20,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+              suffixIcon: _searchController.text.isNotEmpty
+                  ? IconButton(
+                      tooltip: 'Clear search',
+                      onPressed: () {
+                        _searchController.clear();
+                        setState(() {});
+                      },
+                      icon: const Icon(Icons.close_rounded, size: 18),
+                    )
+                  : null,
+              filled: true,
+              fillColor: Theme.of(
+                context,
+              ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.45),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 14,
+                vertical: 12,
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: BorderSide(
+                  color: Theme.of(context).colorScheme.outlineVariant,
+                ),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: BorderSide(
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.outlineVariant.withValues(alpha: 0.7),
+                ),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: BorderSide(
+                  color: Theme.of(context).colorScheme.primary,
+                  width: 1.4,
+                ),
+              ),
             ),
           ),
         ),
@@ -75,34 +131,55 @@ class _ApisTabState extends State<ApisTab> with AutomaticKeepAliveClientMixin {
           scrollDirection: Axis.horizontal,
           padding: const EdgeInsets.symmetric(horizontal: 12),
           child: Row(
-            children: _ApiFilter.values.map((filter) => Padding(
-              padding: const EdgeInsets.only(right: 6),
-              child: FilterChip(
-                key: Key('qa-filter-${filter.name}'),
-                label: Text(_filterLabel(filter)),
-                selected: _filter == filter,
-                onSelected: (_) => setState(() => _filter = filter),
-              ),
-            )).toList(),
+            children: _ApiFilter.values
+                .map(
+                  (filter) => Padding(
+                    padding: const EdgeInsets.only(right: 6),
+                    child: FilterChip(
+                      key: Key('qa-filter-${filter.name}'),
+                      label: Text(_filterLabel(filter)),
+                      selected: _filter == filter,
+                      onSelected: (_) => setState(() => _filter = filter),
+                    ),
+                  ),
+                )
+                .toList(),
           ),
         ),
         if (routes.isNotEmpty)
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 12).copyWith(top: 10),
             child: DropdownButtonFormField<String?>(
               key: const Key('qa-api-route-filter'),
-              initialValue: routes.contains(_selectedRoute) ? _selectedRoute : null,
-              decoration: const InputDecoration(labelText: 'Originating route', isDense: true),
+              initialValue: routes.contains(_selectedRoute)
+                  ? _selectedRoute
+                  : null,
+              decoration: const InputDecoration(
+                labelText: 'Originating route',
+                isDense: true,
+              ),
               items: <DropdownMenuItem<String?>>[
-                const DropdownMenuItem<String?>(value: null, child: Text('All routes')),
-                for (final route in routes) DropdownMenuItem<String?>(value: route, child: Text(route)),
+                const DropdownMenuItem<String?>(
+                  value: null,
+                  child: Text('All routes'),
+                ),
+                for (final route in routes)
+                  DropdownMenuItem<String?>(value: route, child: Text(route)),
               ],
               onChanged: (value) => setState(() => _selectedRoute = value),
             ),
           ),
         Expanded(
           child: visible.isEmpty
-              ? EmptyState(allApis.isEmpty ? 'No API calls captured' : 'No APIs match the current filters', message: allApis.isEmpty ? 'Network requests will appear as you navigate.' : 'Try changing the search or filters.', icon: Icons.http)
+              ? EmptyState(
+                  allApis.isEmpty
+                      ? 'No API calls captured'
+                      : 'No APIs match the current filters',
+                  message: allApis.isEmpty
+                      ? 'Network requests will appear as you navigate.'
+                      : 'Try changing the search or filters.',
+                  icon: Icons.http,
+                )
               : ListView.builder(
                   key: const Key('qa-api-list'),
                   itemCount: visible.length,

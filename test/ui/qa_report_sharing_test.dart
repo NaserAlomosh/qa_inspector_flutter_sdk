@@ -1,14 +1,10 @@
 import 'dart:async';
-import 'dart:typed_data';
-import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:qa_inspector/qa_inspector.dart';
-import 'package:qa_inspector/src/report/qa_report_data.dart';
 import 'package:qa_inspector/src/report/qa_report_file_sharer.dart';
-import 'package:qa_inspector/src/report/qa_report_image_exporter.dart';
 import 'package:qa_inspector/src/ui/inspector_shell.dart';
 
 void main() {
@@ -19,7 +15,7 @@ void main() {
     await tester.pumpWidget(_shell(
       controller,
       sharer: sharer,
-      exporter: (_, __) async => QaReportExportResult.success(bytes, 'qa_report_20260906_232000.png'),
+      exporter: (_, _) async => QaReportExportResult.success(bytes, 'qa_report_20260906_232000.png'),
     ));
 
     await _export(tester);
@@ -38,7 +34,7 @@ void main() {
     await tester.pumpWidget(_shell(
       controller,
       sharer: sharer,
-      exporter: (_, __) async => QaReportExportResult.failure('The PNG report could not be generated.'),
+      exporter: (_, _) async => QaReportExportResult.failure('The PNG report could not be generated.'),
     ));
 
     await _export(tester);
@@ -54,7 +50,7 @@ void main() {
     await tester.pumpWidget(_shell(
       controller,
       sharer: _FakeSharer(throws: true),
-      exporter: (_, __) async => QaReportExportResult.success(Uint8List(1), 'report.png'),
+      exporter: (_, _) async => QaReportExportResult.success(Uint8List(1), 'report.png'),
     ));
 
     await _export(tester);
@@ -69,7 +65,7 @@ void main() {
     await tester.pumpWidget(_shell(
       controller,
       sharer: _FakeSharer(status: QaReportShareStatus.writeFailed),
-      exporter: (_, __) async => QaReportExportResult.success(Uint8List(1), 'report.png'),
+      exporter: (_, _) async => QaReportExportResult.success(Uint8List(1), 'report.png'),
     ));
 
     await _export(tester);
@@ -86,7 +82,7 @@ void main() {
     await tester.pumpWidget(_shell(
       controller,
       sharer: _FakeSharer(),
-      exporter: (_, __) {
+      exporter: (_, _) {
         exports++;
         return completer.future;
       },
@@ -114,7 +110,7 @@ void main() {
     final controller = _controller();
     final sharer = _FakeSharer();
     var exports = 0;
-    await tester.pumpWidget(_shell(controller, sharer: sharer, exporter: (_, __) async {
+    await tester.pumpWidget(_shell(controller, sharer: sharer, exporter: (_, _) async {
       exports++;
       return QaReportExportResult.failure('failure');
     }));
@@ -134,7 +130,7 @@ void main() {
     final controller = QaInspectorController();
     final sharer = _FakeSharer();
     var exports = 0;
-    await tester.pumpWidget(_shell(controller, sharer: sharer, exporter: (_, __) async {
+    await tester.pumpWidget(_shell(controller, sharer: sharer, exporter: (_, _) async {
       exports++;
       return QaReportExportResult.success(Uint8List(1), 'report.png');
     }));
@@ -156,7 +152,11 @@ Future<void> _export(WidgetTester tester, {bool settle = true}) async {
   await tester.tap(find.byKey(const Key('qa-report-actions')));
   await tester.pumpAndSettle();
   await tester.tap(find.byKey(const Key('qa-export-png')));
-  if (settle) await tester.pumpAndSettle(); else await tester.pump();
+  if (settle) {
+    await tester.pumpAndSettle();
+  } else {
+    await tester.pump();
+  }
 }
 
 final class _FakeSharer implements QaReportSharer {
