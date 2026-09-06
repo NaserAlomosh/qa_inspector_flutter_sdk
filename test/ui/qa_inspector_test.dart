@@ -1,31 +1,46 @@
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:qa_inspector/qa_inspector.dart';
 
 void main() {
-  testWidgets('keeps the host child unchanged while disabled', (tester) async {
+  testWidgets('keeps the host child visually unchanged', (tester) async {
+    final controller = QaInspectorController(
+      config: const QaInspectorConfig(enabled: true),
+    );
     const hostKey = Key('host');
 
     await tester.pumpWidget(
-      const QaInspector(
-        config: QaInspectorConfig(enabled: false),
-        child: SizedBox(key: hostKey),
+      QaInspector(
+        controller: controller,
+        child: const SizedBox(key: hostKey),
       ),
     );
 
     expect(find.byKey(hostKey), findsOneWidget);
+    controller.dispose();
   });
 
-  testWidgets('keeps the host child unchanged while enabled', (tester) async {
-    const hostKey = Key('host');
+  testWidgets('does not dispose an externally owned controller', (
+    tester,
+  ) async {
+    final controller = QaInspectorController(
+      config: const QaInspectorConfig(enabled: true),
+    );
+    final observer = QaRouteObserver(controller: controller);
 
     await tester.pumpWidget(
-      const QaInspector(
-        config: QaInspectorConfig(enabled: true),
-        child: SizedBox(key: hostKey),
-      ),
+      QaInspector(controller: controller, child: const SizedBox()),
     );
+    await tester.pumpWidget(const SizedBox());
 
-    expect(find.byKey(hostKey), findsOneWidget);
+    observer.didPush(_route('/home'), null);
+
+    expect(controller.events, hasLength(1));
+    controller.dispose();
   });
 }
+
+MaterialPageRoute<void> _route(String name) => MaterialPageRoute<void>(
+  settings: RouteSettings(name: name),
+  builder: (_) => const SizedBox(),
+);

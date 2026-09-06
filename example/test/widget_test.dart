@@ -3,9 +3,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:qa_inspector_example/main.dart';
 
 void main() {
-  testWidgets('example application starts', (tester) async {
-    await tester.pumpWidget(const ExampleApp());
+  testWidgets('navigates to the details screen', (tester) async {
+    await tester.pumpWidget(const ExampleBootstrap());
 
-    expect(find.text('QA Inspector example application'), findsOneWidget);
+    await tester.tap(find.text('Open details'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Observed route'), findsOneWidget);
   });
 }
