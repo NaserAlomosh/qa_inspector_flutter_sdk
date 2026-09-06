@@ -17,9 +17,9 @@ remain compatible with newer stable Flutter releases.
 ## Current status
 
 The SDK is under development. It currently provides an in-memory bounded event
-timeline, sensitive-data sanitization, and Flutter Navigator route observation.
-Network inspection, the QA overlay, persistence, and report export are not
-implemented yet.
+timeline, sensitive-data sanitization, Dio network inspection, Flutter
+Navigator route observation, an in-app QA overlay, and session-only QA notes.
+Persistence and report export are not implemented yet.
 
 ## Integration
 
