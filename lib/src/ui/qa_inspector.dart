@@ -60,33 +60,22 @@ class _QaInspectorState extends State<QaInspector> {
       ],
     );
   }
-}
-
-class _QaEntryButton extends StatelessWidget {
-  const _QaEntryButton({required this.onPressed});
+}class _QaEntryButton extends StatelessWidget {
+  const _QaEntryButton({
+    required this.onPressed,
+  });
 
   final VoidCallback onPressed;
 
   @override
   Widget build(BuildContext context) {
-    return MediaQuery(
-      data: MediaQueryData.fromView(View.of(context)),
-      child: Directionality(
-        textDirection: TextDirection.ltr,
-        child: Theme(
-          data: ThemeData(colorSchemeSeed: Colors.deepPurple),
-          child: Material(
-            type: MaterialType.transparency,
-            child: FloatingActionButton.small(
-              key: const Key('qa-inspector-button'),
-              tooltip: 'Open QA Inspector',
-              onPressed: onPressed,
-              child: const Text(
-                'QA',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-            ),
-          ),
+    return FloatingActionButton.small(
+      key: const Key('qa-inspector-button'),
+      onPressed: onPressed,
+      child: const Text(
+        'QA',
+        style: TextStyle(
+          fontWeight: FontWeight.bold,
         ),
       ),
     );
