@@ -56,6 +56,6 @@ void main() {
 }
 
 final class RuntimeTestEvent extends QaEvent {
-  const RuntimeTestEvent({required String id, required DateTime timestamp})
-    : super(id: id, timestamp: timestamp, type: QaEventType.sdk);
+  const RuntimeTestEvent({required super.id, required super.timestamp})
+    : super(type: QaEventType.sdk);
 }

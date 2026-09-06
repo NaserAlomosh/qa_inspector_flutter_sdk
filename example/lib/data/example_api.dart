@@ -100,7 +100,7 @@ class ExampleApi {
   Future<void> triggerNotFound() => _dio.get<void>('/posts/999999999');
 
   Future<void> runParallelRequests() async {
-    await Future.wait(<Future<Response<Object?>>[
+    await Future.wait(<Future<Response<Object?>>>[
       _dio.get<Object?>('/todos', queryParameters: <String, int>{'userId': 1}),
       _dio.get<Object?>('/albums', queryParameters: <String, int>{'userId': 1}),
       _dio.get<Object?>('/photos', queryParameters: <String, int>{'albumId': 1}),

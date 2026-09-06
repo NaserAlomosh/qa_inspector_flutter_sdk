@@ -93,27 +93,27 @@ final class QaNetworkInterceptor extends Interceptor {
   }
 
   @override
-  void onError(DioException error, ErrorInterceptorHandler handler) {
+  void onError(DioException err, ErrorInterceptorHandler handler) {
     if (!controller.config.enabled) {
-      handler.next(error);
+      handler.next(err);
       return;
     }
     try {
-      final cancelled = error.type == DioExceptionType.cancel;
+      final cancelled = err.type == DioExceptionType.cancel;
       _publish(
-        error.requestOptions,
-        response: error.response,
+        err.requestOptions,
+        response: err.response,
         outcome:
             cancelled ? QaNetworkOutcome.cancelled : QaNetworkOutcome.failure,
         error: QaNetworkError(
-          type: error.type.name,
+          type: err.type.name,
           message: cancelled ? 'Request cancelled' : 'Dio request failed',
         ),
       );
     } catch (_) {
       // Preserve the exact DioException and its original error flow.
     }
-    handler.next(error);
+    handler.next(err);
   }
 
   QaPayloadCapture _captureRequestBody(Object? body) {
