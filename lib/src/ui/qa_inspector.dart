@@ -3,6 +3,8 @@ import 'package:flutter/services.dart';
 
 import '../core/qa_inspector_controller.dart';
 import 'inspector_shell.dart';
+import 'theme/qa_inspector_theme_mode.dart';
+import 'theme/qa_theme.dart';
 
 /// The global integration boundary for QA Inspector UI.
 class QaInspector extends StatefulWidget {
@@ -10,6 +12,7 @@ class QaInspector extends StatefulWidget {
   const QaInspector({
     required this.controller,
     required this.child,
+    this.themeMode = QaInspectorThemeMode.dark,
     super.key,
   });
 
@@ -18,6 +21,9 @@ class QaInspector extends StatefulWidget {
 
   /// The isolated host application subtree.
   final Widget child;
+
+  /// The QA Inspector appearance, independent of the host theme.
+  final QaInspectorThemeMode themeMode;
 
   @override
   State<QaInspector> createState() => _QaInspectorState();
@@ -48,6 +54,7 @@ class _QaInspectorState extends State<QaInspector> {
           Positioned.fill(
             child: InspectorShell(
               controller: widget.controller,
+              themeMode: widget.themeMode,
               onClose: () => setState(() => _isOpen = false),
             ),
           )
@@ -55,6 +62,7 @@ class _QaInspectorState extends State<QaInspector> {
           Positioned.fill(
             child: _QaEntryOverlay(
               initialPosition: _buttonPosition,
+              themeMode: widget.themeMode,
               onPositionChanged: (position) => _buttonPosition = position,
               onPressed: () => setState(() => _isOpen = true),
             ),
@@ -69,11 +77,13 @@ class _QaEntryOverlay extends StatefulWidget {
     required this.initialPosition,
     required this.onPositionChanged,
     required this.onPressed,
+    required this.themeMode,
   });
 
   final Offset? initialPosition;
   final ValueChanged<Offset> onPositionChanged;
   final VoidCallback onPressed;
+  final QaInspectorThemeMode themeMode;
 
   @override
   State<_QaEntryOverlay> createState() => _QaEntryOverlayState();
@@ -146,6 +156,7 @@ class _QaEntryOverlayState extends State<_QaEntryOverlay> {
               child: _QaEntryButton(
                 dragging: _dragging,
                 onPressed: widget.onPressed,
+                themeMode: widget.themeMode,
               ),
             ),
           ),
@@ -176,14 +187,19 @@ class _QaEntryOverlayState extends State<_QaEntryOverlay> {
 }
 
 class _QaEntryButton extends StatelessWidget {
-  const _QaEntryButton({required this.dragging, required this.onPressed});
+  const _QaEntryButton({
+    required this.dragging,
+    required this.onPressed,
+    required this.themeMode,
+  });
 
   final bool dragging;
   final VoidCallback onPressed;
+  final QaInspectorThemeMode themeMode;
 
   @override
   Widget build(BuildContext context) {
-    final dark = Theme.of(context).brightness == Brightness.dark;
+    final colors = QaTheme.colors(themeMode);
     return Semantics(
       label: 'Open QA Inspector',
       hint: 'Tap to open. Drag to reposition.',
@@ -194,24 +210,28 @@ class _QaEntryButton extends StatelessWidget {
         duration: const Duration(milliseconds: 150),
         child: Material(
           key: const Key('qa-inspector-button'),
-          color: dark ? const Color(0xFF7774E8) : const Color(0xFF5754D8),
+          color: colors.accent,
           elevation: dragging ? 10 : 6,
-          shadowColor: Colors.black45,
+          shadowColor: colors.shadow,
           shape: StadiumBorder(
-            side: BorderSide(color: Colors.white.withValues(alpha: .18)),
+            side: BorderSide(color: colors.buttonBorder),
           ),
-          child: const SizedBox(
+          child: SizedBox(
             width: 64,
             height: 42,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
-                Icon(Icons.bug_report_outlined, size: 17, color: Colors.white),
-                SizedBox(width: 5),
+                Icon(
+                  Icons.bug_report_outlined,
+                  size: 17,
+                  color: colors.buttonForeground,
+                ),
+                const SizedBox(width: 5),
                 Text(
                   'QA',
                   style: TextStyle(
-                    color: Colors.white,
+                    color: colors.buttonForeground,
                     fontWeight: FontWeight.w800,
                     letterSpacing: .3,
                   ),

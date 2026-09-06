@@ -1,24 +1,41 @@
 import 'package:flutter/material.dart';
 
 import 'qa_colors.dart';
+import 'qa_inspector_theme_mode.dart';
 import 'qa_typography.dart';
 
 abstract final class QaTheme {
+  /// Resolves an SDK-owned Material theme for [mode].
+  static ThemeData resolve(QaInspectorThemeMode mode) =>
+      mode == QaInspectorThemeMode.dark ? dark() : light();
+
+  /// Resolves semantic SDK color tokens for [mode].
+  static QaColorTokens colors(QaInspectorThemeMode mode) =>
+      mode == QaInspectorThemeMode.dark ? QaColors.dark : QaColors.light;
+
   static ThemeData light() => _build(Brightness.light);
   static ThemeData dark() => _build(Brightness.dark);
 
   static ThemeData _build(Brightness brightness) {
     final dark = brightness == Brightness.dark;
+    final colors = dark ? QaColors.dark : QaColors.light;
     final scheme = ColorScheme.fromSeed(
-      seedColor: QaColors.accent,
+      seedColor: colors.accent,
       brightness: brightness,
-      surface: dark ? QaColors.darkSurface : QaColors.surface,
+      surface: colors.surface,
+    ).copyWith(
+      primary: colors.accent,
+      onSurface: colors.textPrimary,
+      onSurfaceVariant: colors.textSecondary,
+      outline: colors.textSecondary,
+      outlineVariant: colors.border,
+      surfaceContainerHighest: colors.surfaceMuted,
     );
     return ThemeData(
       useMaterial3: true,
       brightness: brightness,
       colorScheme: scheme,
-      scaffoldBackgroundColor: dark ? QaColors.darkCanvas : QaColors.canvas,
+      scaffoldBackgroundColor: colors.background,
       textTheme: QaTypography.textTheme(brightness),
       dividerColor: dark ? QaColors.darkBorder : QaColors.border,
       appBarTheme: AppBarTheme(backgroundColor: dark ? QaColors.darkSurface : Colors.white, surfaceTintColor: Colors.transparent, elevation: 0),

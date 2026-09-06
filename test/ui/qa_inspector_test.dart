@@ -129,14 +129,124 @@ void main() {
     controller.dispose();
   });
 
-  testWidgets('dark host brightness selects the dark inspector theme', (tester) async {
+  testWidgets('default inspector theme is dark regardless of host brightness', (tester) async {
     final controller = _controller();
-    await tester.pumpWidget(MaterialApp(theme: ThemeData.dark(), home: QaInspector(controller: controller, child: const SizedBox())));
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: ThemeData.light(),
+        home: QaInspector(controller: controller, child: const SizedBox()),
+      ),
+    );
     await tester.tap(find.byKey(const Key('qa-inspector-button')));
     await tester.pumpAndSettle();
 
     final context = tester.element(find.byKey(const Key('qa-inspector-overlay')));
     expect(Theme.of(context).brightness, Brightness.dark);
+    controller.dispose();
+  });
+
+  testWidgets('explicit light inspector ignores a ridiculous dark host theme', (
+    tester,
+  ) async {
+    final controller = _controller();
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: ThemeData.dark().copyWith(
+          colorScheme: const ColorScheme.dark(
+            primary: Colors.pink,
+            surface: Colors.yellow,
+            onSurface: Colors.lime,
+          ),
+        ),
+        home: QaInspector(
+          controller: controller,
+          themeMode: QaInspectorThemeMode.light,
+          child: const SizedBox(),
+        ),
+      ),
+    );
+    final button = tester.widget<Material>(find.byKey(const Key('qa-inspector-button')));
+    expect(button.color, isNot(Colors.pink));
+    await tester.tap(find.byKey(const Key('qa-inspector-button')));
+    await tester.pumpAndSettle();
+
+    final context = tester.element(find.byKey(const Key('qa-inspector-overlay')));
+    expect(Theme.of(context).brightness, Brightness.light);
+    expect(Theme.of(context).colorScheme.primary, isNot(Colors.pink));
+    expect(Theme.of(context).colorScheme.surface, isNot(Colors.yellow));
+    controller.dispose();
+  });
+
+  testWidgets('runtime theme changes preserve controller events', (tester) async {
+    final controller = _controller();
+    _addRoute(controller, id: 'theme-event');
+    Widget app(QaInspectorThemeMode mode) => MaterialApp(
+      home: QaInspector(
+        controller: controller,
+        themeMode: mode,
+        child: const SizedBox(),
+      ),
+    );
+    await tester.pumpWidget(app(QaInspectorThemeMode.dark));
+    await tester.tap(find.byKey(const Key('qa-inspector-button')));
+    await tester.pumpAndSettle();
+    var context = tester.element(find.byKey(const Key('qa-inspector-overlay')));
+    expect(Theme.of(context).brightness, Brightness.dark);
+
+    await tester.pumpWidget(app(QaInspectorThemeMode.light));
+    await tester.pumpAndSettle();
+    context = tester.element(find.byKey(const Key('qa-inspector-overlay')));
+    expect(Theme.of(context).brightness, Brightness.light);
+    expect(controller.events.single.id, 'theme-event');
+    controller.dispose();
+  });
+
+  testWidgets('timeline network details reuse API details without mutation', (
+    tester,
+  ) async {
+    final controller = _controller();
+    _addNetwork(controller, id: 'timeline-api', path: '/users');
+    await tester.pumpWidget(_openHost(controller));
+    await tester.tap(find.byKey(const Key('qa-inspector-button')));
+    await tester.pumpAndSettle();
+    final events = controller.events;
+
+    await tester.tap(find.byKey(const Key('qa-network-timeline-api')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('qa-api-details')), findsOneWidget);
+    expect(find.text('POST /users'), findsOneWidget);
+    expect(find.textContaining('Status: 200'), findsOneWidget);
+    expect(find.textContaining('"password": "***"'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('qa-api-details-close')));
+    await tester.pumpAndSettle();
+
+    expect(controller.events, equals(events));
+    expect(find.byKey(const Key('qa-network-timeline-api')), findsOneWidget);
+    controller.dispose();
+  });
+
+  testWidgets('timeline route details remain on the inspector navigator', (
+    tester,
+  ) async {
+    final controller = _controller();
+    final observer = _CountingNavigatorObserver();
+    _addRoute(controller, id: 'timeline-route');
+    await tester.pumpWidget(_host(controller, observer: observer));
+    final hostEvents = observer.events;
+    await tester.tap(find.byKey(const Key('qa-inspector-button')));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('qa-route-timeline-route')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('qa-route-details')), findsOneWidget);
+    expect(find.text('PUSH'), findsOneWidget);
+    expect(find.text('/home'), findsOneWidget);
+    expect(find.text('/transfer'), findsNWidgets(2));
+    expect(observer.events, hostEvents);
+    await tester.tap(find.byKey(const Key('qa-route-details-close')));
+    await tester.pumpAndSettle();
+    expect(controller.events, hasLength(1));
+    expect(observer.events, hostEvents);
     controller.dispose();
   });
 

@@ -21,6 +21,7 @@ class NetworkTile extends StatelessWidget {
     final path = event.path.isEmpty ? event.url : event.path;
     return Semantics(
       label: '${event.outcome.name} API, ${event.method}, $path, status $status',
+      button: onTap != null,
       child: InkWell(
         key: Key('qa-network-${event.id}'),
         onTap: onTap,

@@ -89,6 +89,7 @@ class _ExampleAppState extends State<ExampleApp> {
       builder: (context, child) {
         return QaInspector(
           controller: _qaController,
+          themeMode: QaInspectorThemeMode.dark,
           child: child ?? const SizedBox.shrink(),
         );
       },

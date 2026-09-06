@@ -15,3 +15,4 @@ export 'src/report/qa_report_limits.dart';
 export 'src/report/qa_report_text_renderer.dart';
 export 'src/security/qa_data_sanitization_config.dart';
 export 'src/ui/qa_inspector.dart';
+export 'src/ui/theme/qa_inspector_theme_mode.dart';
