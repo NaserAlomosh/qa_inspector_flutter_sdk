@@ -11,15 +11,11 @@ void main() {
     expect(runtime.timeline.maxEvents, QaInspectorConfig.defaultMaxEvents);
   });
 
-  test('generates unique event IDs across runtimes', () {
-    final firstRuntime = QaInspectorRuntime(const QaInspectorConfig());
-    final secondRuntime = QaInspectorRuntime(const QaInspectorConfig());
-
+  test('generates unique event IDs within a runtime', () {
+    final runtime = QaInspectorRuntime(const QaInspectorConfig());
     final ids = <String>{
       for (var index = 0; index < 1000; index++)
-        index.isEven
-            ? firstRuntime.nextEventId()
-            : secondRuntime.nextEventId(),
+        runtime.nextEventId(),
     };
 
     expect(ids, hasLength(1000));

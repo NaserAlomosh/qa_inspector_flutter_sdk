@@ -16,7 +16,30 @@ remain compatible with newer stable Flutter releases.
 
 ## Current status
 
-The SDK is under development. Phase 1 establishes the package architecture,
-configuration, public entry point, and a runnable example application. Network
-inspection, route observation, event collection, the QA overlay, and report
-export are not implemented yet.
+The SDK is under development. It currently provides an in-memory bounded event
+timeline, sensitive-data sanitization, and Flutter Navigator route observation.
+Network inspection, the QA overlay, persistence, and report export are not
+implemented yet.
+
+## Integration
+
+Create one controller and share it with QA Inspector and every collector:
+
+```dart
+final qaController = QaInspectorController(
+  config: const QaInspectorConfig(enabled: true),
+);
+
+QaInspector(
+  controller: qaController,
+  child: MaterialApp(
+    navigatorObservers: [
+      QaRouteObserver(controller: qaController),
+    ],
+  ),
+);
+```
+
+The application that creates `QaInspectorController` owns its lifecycle and
+must call `dispose` when the controller is no longer needed. `QaInspector` and
+collectors never dispose an externally supplied controller.
