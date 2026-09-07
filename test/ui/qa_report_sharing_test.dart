@@ -12,11 +12,16 @@ void main() {
     final bytes = Uint8List.fromList(<int>[1, 3, 5, 7]);
     final sharer = _FakeSharer();
     final controller = _controller();
-    await tester.pumpWidget(_shell(
-      controller,
-      sharer: sharer,
-      exporter: (_, _) async => QaReportExportResult.success(bytes, 'qa_report_20260906_232000.png'),
-    ));
+    await tester.pumpWidget(
+      _shell(
+        controller,
+        sharer: sharer,
+        exporter: (_, _) async => QaReportExportResult.success(
+          bytes,
+          'qa_report_20260906_232000.png',
+        ),
+      ),
+    );
 
     await _export(tester);
 
@@ -28,14 +33,20 @@ void main() {
     controller.dispose();
   });
 
-  testWidgets('generation failure does not share and shows safe feedback', (tester) async {
+  testWidgets('generation failure does not share and shows safe feedback', (
+    tester,
+  ) async {
     final sharer = _FakeSharer();
     final controller = _controller();
-    await tester.pumpWidget(_shell(
-      controller,
-      sharer: sharer,
-      exporter: (_, _) async => QaReportExportResult.failure('The PNG report could not be generated.'),
-    ));
+    await tester.pumpWidget(
+      _shell(
+        controller,
+        sharer: sharer,
+        exporter: (_, _) async => QaReportExportResult.failure(
+          'The PNG report could not be generated.',
+        ),
+      ),
+    );
 
     await _export(tester);
 
@@ -45,13 +56,18 @@ void main() {
     controller.dispose();
   });
 
-  testWidgets('share failures do not escape and show safe feedback', (tester) async {
+  testWidgets('share failures do not escape and show safe feedback', (
+    tester,
+  ) async {
     final controller = _controller();
-    await tester.pumpWidget(_shell(
-      controller,
-      sharer: _FakeSharer(throws: true),
-      exporter: (_, _) async => QaReportExportResult.success(Uint8List(1), 'report.png'),
-    ));
+    await tester.pumpWidget(
+      _shell(
+        controller,
+        sharer: _FakeSharer(throws: true),
+        exporter: (_, _) async =>
+            QaReportExportResult.success(Uint8List(1), 'report.png'),
+      ),
+    );
 
     await _export(tester);
 
@@ -62,11 +78,14 @@ void main() {
 
   testWidgets('file preparation failures show safe feedback', (tester) async {
     final controller = _controller();
-    await tester.pumpWidget(_shell(
-      controller,
-      sharer: _FakeSharer(status: QaReportShareStatus.writeFailed),
-      exporter: (_, _) async => QaReportExportResult.success(Uint8List(1), 'report.png'),
-    ));
+    await tester.pumpWidget(
+      _shell(
+        controller,
+        sharer: _FakeSharer(status: QaReportShareStatus.writeFailed),
+        exporter: (_, _) async =>
+            QaReportExportResult.success(Uint8List(1), 'report.png'),
+      ),
+    );
 
     await _export(tester);
 
@@ -75,45 +94,64 @@ void main() {
     controller.dispose();
   });
 
-  testWidgets('double export does not start simultaneous operations', (tester) async {
+  testWidgets('double export does not start simultaneous operations', (
+    tester,
+  ) async {
     final completer = Completer<QaReportExportResult>();
     var exports = 0;
     final controller = _controller();
-    await tester.pumpWidget(_shell(
-      controller,
-      sharer: _FakeSharer(),
-      exporter: (_, _) {
-        exports++;
-        return completer.future;
-      },
-    ));
+    await tester.pumpWidget(
+      _shell(
+        controller,
+        sharer: _FakeSharer(),
+        exporter: (_, _) {
+          exports++;
+          return completer.future;
+        },
+      ),
+    );
 
     await _export(tester, settle: false);
     await tester.tap(find.byKey(const Key('qa-report-actions')));
     await tester.pumpAndSettle();
-    final exportItem = tester.widget<PopupMenuItem<Object?>>(find.byKey(const Key('qa-export-png')));
+    final exportItem = tester.widget<PopupMenuItem<Object?>>(
+      find.byKey(const Key('qa-export-png')),
+    );
     expect(exportItem.enabled, isFalse);
     await tester.tap(find.byKey(const Key('qa-export-png')));
     await tester.pump();
     expect(exports, 1);
-    completer.complete(QaReportExportResult.failure('The PNG report could not be generated.'));
+    completer.complete(
+      QaReportExportResult.failure('The PNG report could not be generated.'),
+    );
     await tester.pumpAndSettle();
     controller.dispose();
   });
 
   testWidgets('Copy Report remains independent of PNG sharing', (tester) async {
     String? copied;
-    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(SystemChannels.platform, (call) async {
-      if (call.method == 'Clipboard.setData') copied = (call.arguments as Map<Object?, Object?>)['text'] as String?;
-      return null;
-    });
+    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+      SystemChannels.platform,
+      (call) async {
+        if (call.method == 'Clipboard.setData') {
+          copied = (call.arguments as Map<Object?, Object?>)['text'] as String?;
+        }
+        return null;
+      },
+    );
     final controller = _controller();
     final sharer = _FakeSharer();
     var exports = 0;
-    await tester.pumpWidget(_shell(controller, sharer: sharer, exporter: (_, _) async {
-      exports++;
-      return QaReportExportResult.failure('failure');
-    }));
+    await tester.pumpWidget(
+      _shell(
+        controller,
+        sharer: sharer,
+        exporter: (_, _) async {
+          exports++;
+          return QaReportExportResult.failure('failure');
+        },
+      ),
+    );
 
     await tester.tap(find.byKey(const Key('qa-report-actions')));
     await tester.pumpAndSettle();
@@ -130,10 +168,16 @@ void main() {
     final controller = QaInspectorController();
     final sharer = _FakeSharer();
     var exports = 0;
-    await tester.pumpWidget(_shell(controller, sharer: sharer, exporter: (_, _) async {
-      exports++;
-      return QaReportExportResult.success(Uint8List(1), 'report.png');
-    }));
+    await tester.pumpWidget(
+      _shell(
+        controller,
+        sharer: sharer,
+        exporter: (_, _) async {
+          exports++;
+          return QaReportExportResult.success(Uint8List(1), 'report.png');
+        },
+      ),
+    );
 
     await _export(tester);
 
@@ -143,10 +187,21 @@ void main() {
   });
 }
 
-QaInspectorController _controller() => QaInspectorController(config: const QaInspectorConfig(enabled: true));
+QaInspectorController _controller() =>
+    QaInspectorController(config: const QaInspectorConfig(enabled: true));
 
-Widget _shell(QaInspectorController controller, {required QaReportSharer sharer, required QaReportExporter exporter}) =>
-    MaterialApp(home: InspectorShell(controller: controller, onClose: () {}, reportSharer: sharer, reportExporter: exporter));
+Widget _shell(
+  QaInspectorController controller, {
+  required QaReportSharer sharer,
+  required QaReportExporter exporter,
+}) => MaterialApp(
+  home: InspectorShell(
+    controller: controller,
+    onClose: () {},
+    reportSharer: sharer,
+    reportExporter: exporter,
+  ),
+);
 
 Future<void> _export(WidgetTester tester, {bool settle = true}) async {
   await tester.tap(find.byKey(const Key('qa-report-actions')));
@@ -170,7 +225,11 @@ final class _FakeSharer implements QaReportSharer {
   Rect? origin;
 
   @override
-  Future<QaReportShareResult> share({required Uint8List bytes, required String filename, required Rect sharePositionOrigin}) async {
+  Future<QaReportShareResult> share({
+    required Uint8List bytes,
+    required String filename,
+    required Rect sharePositionOrigin,
+  }) async {
     calls++;
     this.bytes = bytes;
     this.filename = filename;

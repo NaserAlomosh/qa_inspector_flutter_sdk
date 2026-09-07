@@ -53,10 +53,7 @@ void main() {
           'password': 'password-value',
           'accountNumber': 'account-value',
         }),
-        <Object?, Object?>{
-          'password': '***',
-          'accountNumber': '***',
-        },
+        <Object?, Object?>{'password': '***', 'accountNumber': '***'},
       );
     });
 
@@ -73,10 +70,7 @@ void main() {
           'password': 'visible-value',
           'accountNumber': 'account-value',
         }),
-        <Object?, Object?>{
-          'password': 'visible-value',
-          'accountNumber': '***',
-        },
+        <Object?, Object?>{'password': 'visible-value', 'accountNumber': '***'},
       );
     });
 
@@ -123,27 +117,21 @@ void main() {
         },
       ];
 
-      expect(
-        sanitizer.sanitizeBody(request),
-        <Object?, Object?>{
-          'credentials': <Object?, Object?>{
-            'password': '***',
-            'challenges': <Object?>[
-              <Object?, Object?>{'otp': '***'},
-            ],
-          },
+      expect(sanitizer.sanitizeBody(request), <Object?, Object?>{
+        'credentials': <Object?, Object?>{
+          'password': '***',
+          'challenges': <Object?>[
+            <Object?, Object?>{'otp': '***'},
+          ],
         },
-      );
-      expect(
-        sanitizer.sanitizeBody(response),
-        <Object?>[
-          <Object?, Object?>{
-            'accounts': <Object?>[
-              <Object?, Object?>{'cardNumber': '***'},
-            ],
-          },
-        ],
-      );
+      });
+      expect(sanitizer.sanitizeBody(response), <Object?>[
+        <Object?, Object?>{
+          'accounts': <Object?>[
+            <Object?, Object?>{'cardNumber': '***'},
+          ],
+        },
+      ]);
     });
 
     test('does not mutate original maps or lists', () {
@@ -189,13 +177,10 @@ void main() {
       final circular = <String, Object?>{'name': 'safe'};
       circular['self'] = circular;
 
-      expect(
-        QaDataSanitizer().sanitizeBody(circular),
-        <Object?, Object?>{
-          'name': 'safe',
-          'self': QaDataSanitizer.circularReference,
-        },
-      );
+      expect(QaDataSanitizer().sanitizeBody(circular), <Object?, Object?>{
+        'name': 'safe',
+        'self': QaDataSanitizer.circularReference,
+      });
     });
 
     test('limits excessive recursion', () {
@@ -226,18 +211,15 @@ void main() {
         'Content-Type': 'application/json',
       };
 
-      expect(
-        QaDataSanitizer().sanitizeHeaders(headers),
-        <Object?, Object?>{
-          'Authorization': '***',
-          'PROXY-AUTHORIZATION': '***',
-          'Cookie': '***',
-          'Set-Cookie': '***',
-          'X-API-KEY': '***',
-          'api-key': '***',
-          'Content-Type': 'application/json',
-        },
-      );
+      expect(QaDataSanitizer().sanitizeHeaders(headers), <Object?, Object?>{
+        'Authorization': '***',
+        'PROXY-AUTHORIZATION': '***',
+        'Cookie': '***',
+        'Set-Cookie': '***',
+        'X-API-KEY': '***',
+        'api-key': '***',
+        'Content-Type': 'application/json',
+      });
       expect(headers['Authorization'], 'Bearer authorization-value');
     });
 
@@ -253,10 +235,7 @@ void main() {
           'Authorization': 'authorization-value',
           'X-Device-Token': 'device-value',
         }),
-        <Object?, Object?>{
-          'Authorization': '***',
-          'X-Device-Token': '***',
-        },
+        <Object?, Object?>{'Authorization': '***', 'X-Device-Token': '***'},
       );
     });
 

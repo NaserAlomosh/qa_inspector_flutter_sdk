@@ -21,7 +21,13 @@ class TimelineTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (events.isEmpty) return const EmptyState('No events yet', message: 'Use the app and activity will appear here.', icon: Icons.timeline);
+    if (events.isEmpty) {
+      return const EmptyState(
+        'No events yet',
+        message: 'Use the app and activity will appear here.',
+        icon: Icons.timeline,
+      );
+    }
     return ListView.builder(
       key: const Key('qa-timeline-list'),
       itemCount: events.length,

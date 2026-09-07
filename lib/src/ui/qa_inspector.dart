@@ -7,8 +7,7 @@ import 'theme/qa_inspector_theme_mode.dart';
 import 'theme/qa_theme.dart';
 
 /// The global integration boundary for QA Inspector UI.
-class QaInspector extends StatefulWidget {
-  /// Creates an inspector above [child] using an externally owned controller.
+class QaInspector extends StatelessWidget {
   const QaInspector({
     required this.controller,
     required this.child,
@@ -16,58 +15,64 @@ class QaInspector extends StatefulWidget {
     super.key,
   });
 
-  /// The controller shared by the SDK collectors.
   final QaInspectorController controller;
-
-  /// The isolated host application subtree.
   final Widget child;
-
-  /// The QA Inspector appearance, independent of the host theme.
   final QaInspectorThemeMode themeMode;
 
   @override
-  State<QaInspector> createState() => _QaInspectorState();
+  Widget build(BuildContext context) {
+    if (!controller.config.enabled) {
+      return child;
+    }
+
+    return Stack(
+      textDirection: TextDirection.ltr,
+      children: <Widget>[
+        child,
+        _QaInspectorOverlay(controller: controller, themeMode: themeMode),
+      ],
+    );
+  }
 }
 
-class _QaInspectorState extends State<QaInspector> {
+class _QaInspectorOverlay extends StatefulWidget {
+  const _QaInspectorOverlay({
+    required this.controller,
+    required this.themeMode,
+  });
+
+  final QaInspectorController controller;
+  final QaInspectorThemeMode themeMode;
+
+  @override
+  State<_QaInspectorOverlay> createState() => _QaInspectorOverlayState();
+}
+
+class _QaInspectorOverlayState extends State<_QaInspectorOverlay> {
   bool _isOpen = false;
   Offset? _buttonPosition;
 
   @override
-  void didUpdateWidget(QaInspector oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (!widget.controller.config.enabled && _isOpen) {
-      _isOpen = false;
-    }
-  }
-
-  @override
   Widget build(BuildContext context) {
-    if (!widget.controller.config.enabled) {
-      return widget.child;
-    }
-    return Stack(
-      textDirection: TextDirection.ltr,
-      children: <Widget>[
-        widget.child,
-        if (_isOpen)
-          Positioned.fill(
-            child: InspectorShell(
+    return Positioned.fill(
+      child: _isOpen
+          ? InspectorShell(
               controller: widget.controller,
               themeMode: widget.themeMode,
-              onClose: () => setState(() => _isOpen = false),
-            ),
-          )
-        else
-          Positioned.fill(
-            child: _QaEntryOverlay(
+              onClose: () {
+                setState(() => _isOpen = false);
+              },
+            )
+          : _QaEntryOverlay(
               initialPosition: _buttonPosition,
               themeMode: widget.themeMode,
-              onPositionChanged: (position) => _buttonPosition = position,
-              onPressed: () => setState(() => _isOpen = true),
+              onPositionChanged: (position) {
+                _buttonPosition = position;
+              },
+              onPressed: () {
+                setState(() => _isOpen = true);
+              },
             ),
-          ),
-      ],
     );
   }
 }
@@ -213,9 +218,7 @@ class _QaEntryButton extends StatelessWidget {
           color: colors.accent,
           elevation: dragging ? 10 : 6,
           shadowColor: colors.shadow,
-          shape: StadiumBorder(
-            side: BorderSide(color: colors.buttonBorder),
-          ),
+          shape: StadiumBorder(side: BorderSide(color: colors.buttonBorder)),
           child: SizedBox(
             width: 64,
             height: 42,

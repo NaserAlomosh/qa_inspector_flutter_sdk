@@ -127,7 +127,10 @@ void main() {
         routeNameResolver: (_) => throw StateError('resolver failed'),
       );
 
-      expect(() => observer.didPush(_route('/fallback'), null), returnsNormally);
+      expect(
+        () => observer.didPush(_route('/fallback'), null),
+        returnsNormally,
+      );
       expect(_events(controller).single.toRoute, '/fallback');
     });
 

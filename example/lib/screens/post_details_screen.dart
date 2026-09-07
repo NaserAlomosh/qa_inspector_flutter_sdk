@@ -36,9 +36,11 @@ class _PostDetailsScreenState extends State<PostDetailsScreen> {
       if (mounted) setState(() => _comments = comments);
     } on DioException catch (error) {
       if (mounted) {
-        setState(() => _error = error.response?.statusCode == null
-            ? 'Could not load comments. Check your connection and try again.'
-            : 'Could not load comments (HTTP ${error.response!.statusCode}).');
+        setState(
+          () => _error = error.response?.statusCode == null
+              ? 'Could not load comments. Check your connection and try again.'
+              : 'Could not load comments (HTTP ${error.response!.statusCode}).',
+        );
       }
     }
   }
@@ -79,9 +81,9 @@ class _PostDetailsScreenState extends State<PostDetailsScreen> {
   }
 
   void _showMessage(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
@@ -106,8 +108,9 @@ class _PostDetailsScreenState extends State<PostDetailsScreen> {
                     runSpacing: 8,
                     children: <Widget>[
                       FilledButton.icon(
-                        onPressed:
-                            _runningParallel ? null : _runParallelRequests,
+                        onPressed: _runningParallel
+                            ? null
+                            : _runParallelRequests,
                         icon: const Icon(Icons.call_split),
                         label: const Text('Run 3 parallel APIs'),
                       ),
@@ -119,7 +122,10 @@ class _PostDetailsScreenState extends State<PostDetailsScreen> {
                     ],
                   ),
                   const SizedBox(height: 20),
-                  Text('Comments', style: Theme.of(context).textTheme.titleLarge),
+                  Text(
+                    'Comments',
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
                 ],
               ),
             ),

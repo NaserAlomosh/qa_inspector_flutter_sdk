@@ -16,11 +16,17 @@ class RoutesTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final routes = events.whereType<QaRouteEvent>().toList(growable: false);
-    if (routes.isEmpty) return const EmptyState('No navigation captured yet.', icon: Icons.alt_route);
+    if (routes.isEmpty) {
+      return const EmptyState(
+        'No navigation captured yet.',
+        icon: Icons.alt_route,
+      );
+    }
     return ListView.builder(
       key: const Key('qa-route-list'),
       itemCount: routes.length,
-      itemBuilder: (context, index) => RouteTile(event: routes[index], showCurrent: true),
+      itemBuilder: (context, index) =>
+          RouteTile(event: routes[index], showCurrent: true),
     );
   }
 }

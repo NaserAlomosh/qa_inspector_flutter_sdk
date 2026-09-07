@@ -14,12 +14,16 @@ final class QaReportMetadata {
 
   /// Host-provided application version.
   final String? appVersion;
+
   /// Host-provided application build number.
   final String? buildNumber;
+
   /// Host-provided platform label.
   final String? platform;
+
   /// Host-provided operating-system version.
   final String? osVersion;
+
   /// Host-provided device model.
   final String? deviceModel;
 }
@@ -35,8 +39,10 @@ final class QaReportNavigation {
 
   /// Navigation operation.
   final QaRouteAction action;
+
   /// Route left by the transition.
   final String fromRoute;
+
   /// Route entered by the transition.
   final String toRoute;
 }
@@ -65,34 +71,49 @@ final class QaReportApi {
 
   /// HTTP method.
   final String method;
+
   /// Sanitized full URL.
   final String url;
+
   /// Sanitized request path.
   final String path;
+
   /// Route captured when the request started.
   final String route;
+
   /// Request start time.
   final DateTime startedAt;
+
   /// Request completion time.
   final DateTime completedAt;
+
   /// Request duration.
   final Duration duration;
+
   /// HTTP status when available.
   final int? statusCode;
+
   /// Final network outcome.
   final QaNetworkOutcome outcome;
+
   /// Deterministically formatted sanitized query.
   final String queryParameters;
+
   /// Deterministically formatted sanitized request body.
   final String requestBody;
+
   /// Deterministically formatted sanitized response body.
   final String responseBody;
+
   /// Whether network capture truncated the request.
   final bool requestTruncated;
+
   /// Whether network capture truncated the response.
   final bool responseTruncated;
+
   /// Safe network error category.
   final String? errorType;
+
   /// Safe network error message.
   final String? errorMessage;
 
@@ -118,22 +139,31 @@ final class QaReportStep {
 
   /// One-based step number.
   final int number;
+
   /// Route captured when the request started.
   final String route;
+
   /// Human-readable screen label.
   final String screen;
+
   /// Time this visit became active, when observed.
   final DateTime? enteredAt;
+
   /// Previous route, when known.
   final String? enteredFrom;
+
   /// Action that entered this visit; null denotes initial.
   final QaRouteAction? enteredBy;
+
   /// APIs that originated during this visit.
   final List<QaReportApi> apis;
+
   /// Transition that followed this visit.
   final QaReportNavigation? nextNavigation;
+
   /// Whether no later captured visit exists.
   final bool isFinal;
+
   /// APIs omitted from this step by safety limits.
   final int omittedApis;
 }
@@ -156,22 +186,31 @@ final class QaReportData {
 
   /// Time captured at report generation start.
   final DateTime generatedAt;
+
   /// Final route captured at report generation start.
   final String currentRoute;
+
   /// Session issue notes.
   final String notes;
+
   /// Bounded chronological screen visits.
   final List<QaReportStep> steps;
+
   /// Total visits before report limits.
   final int totalScreens;
+
   /// Total APIs before report limits.
   final int totalApis;
+
   /// Failed APIs before report limits.
   final int failedApis;
+
   /// Visits omitted by report limits.
   final int omittedSteps;
+
   /// APIs omitted from this step by safety limits.
   final int omittedApis;
+
   /// Optional host-provided metadata.
   final QaReportMetadata? metadata;
 }

@@ -62,9 +62,7 @@ final class QaNetworkInterceptor extends Interceptor {
           queryParameters: _freeze(
             _sanitizer.sanitizeQueryParameters(options.queryParameters),
           ),
-          requestHeaders: _freeze(
-            _sanitizer.sanitizeHeaders(options.headers),
-          ),
+          requestHeaders: _freeze(_sanitizer.sanitizeHeaders(options.headers)),
           requestBody: _captureRequestBody(options.data),
         );
       }
@@ -75,7 +73,10 @@ final class QaNetworkInterceptor extends Interceptor {
   }
 
   @override
-  void onResponse(Response<dynamic> response, ResponseInterceptorHandler handler) {
+  void onResponse(
+    Response<dynamic> response,
+    ResponseInterceptorHandler handler,
+  ) {
     if (!controller.config.enabled) {
       handler.next(response);
       return;
@@ -103,8 +104,9 @@ final class QaNetworkInterceptor extends Interceptor {
       _publish(
         err.requestOptions,
         response: err.response,
-        outcome:
-            cancelled ? QaNetworkOutcome.cancelled : QaNetworkOutcome.failure,
+        outcome: cancelled
+            ? QaNetworkOutcome.cancelled
+            : QaNetworkOutcome.failure,
         error: QaNetworkError(
           type: err.type.name,
           message: cancelled ? 'Request cancelled' : 'Dio request failed',
@@ -175,9 +177,9 @@ final class QaNetworkInterceptor extends Interceptor {
       'length': entry.value.length,
       'content': QaDataSanitizer.binaryContent,
     };
-    final keyed = _sanitizer.sanitizeBody(<String, Object?>{
-      entry.key: metadata,
-    }) as Map<Object?, Object?>;
+    final keyed =
+        _sanitizer.sanitizeBody(<String, Object?>{entry.key: metadata})
+            as Map<Object?, Object?>;
     final sanitized = keyed[entry.key];
     return sanitized == QaDataSanitizer.mask
         ? <String, Object?>{

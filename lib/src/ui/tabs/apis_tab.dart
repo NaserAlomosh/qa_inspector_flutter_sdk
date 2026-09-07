@@ -148,7 +148,9 @@ class _ApisTabState extends State<ApisTab> with AutomaticKeepAliveClientMixin {
         ),
         if (routes.isNotEmpty)
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12).copyWith(top: 10),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 12,
+            ).copyWith(top: 10),
             child: DropdownButtonFormField<String?>(
               key: const Key('qa-api-route-filter'),
               initialValue: routes.contains(_selectedRoute)

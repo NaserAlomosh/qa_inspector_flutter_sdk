@@ -39,10 +39,7 @@ void main() {
     controller
       ..dispose()
       ..dispose();
-    expect(
-      () => observer.didPush(_route('/after'), null),
-      returnsNormally,
-    );
+    expect(() => observer.didPush(_route('/after'), null), returnsNormally);
     expect(controller.events, hasLength(1));
   });
 
@@ -65,7 +62,12 @@ void main() {
     expect(controller.notes, 'line one\nline two');
     expect(notifications, 1);
 
-    controller.updateNotes(List<String>.filled(QaInspectorController.maxNotesLength + 10, 'x').join());
+    controller.updateNotes(
+      List<String>.filled(
+        QaInspectorController.maxNotesLength + 10,
+        'x',
+      ).join(),
+    );
     expect(controller.notes, hasLength(QaInspectorController.maxNotesLength));
     expect(notifications, 2);
 
@@ -102,9 +104,8 @@ void main() {
   });
 }
 
-QaInspectorController _enabledController() => QaInspectorController(
-  config: const QaInspectorConfig(enabled: true),
-);
+QaInspectorController _enabledController() =>
+    QaInspectorController(config: const QaInspectorConfig(enabled: true));
 
 MaterialPageRoute<void> _route(String name) => MaterialPageRoute<void>(
   settings: RouteSettings(name: name),

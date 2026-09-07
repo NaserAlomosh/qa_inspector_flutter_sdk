@@ -35,6 +35,7 @@ class InspectorShell extends StatefulWidget {
     this.reportExporter,
     super.key,
   });
+
   final QaInspectorController controller;
   final VoidCallback onClose;
   final QaInspectorThemeMode themeMode;
@@ -56,6 +57,7 @@ class _InspectorShellState extends State<InspectorShell> {
   @override
   Widget build(BuildContext context) {
     final rtl = _hostLocale?.languageCode.toLowerCase() == 'ar';
+
     return MediaQuery(
       data: MediaQueryData.fromView(View.of(context)),
       child: MaterialApp(
@@ -85,6 +87,7 @@ class _Inspector extends StatefulWidget {
     required this.reportSharer,
     this.reportExporter,
   });
+
   final QaInspectorController controller;
   final VoidCallback onClose;
   final String message;
@@ -95,8 +98,42 @@ class _Inspector extends StatefulWidget {
   State<_Inspector> createState() => _InspectorState();
 }
 
-class _InspectorState extends State<_Inspector> {
+class _InspectorState extends State<_Inspector>
+    with SingleTickerProviderStateMixin {
   bool _isExportingPng = false;
+
+  late final TabController _tabController;
+  int _lastTabIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _tabController = TabController(length: 4, vsync: this);
+
+    _tabController.animation?.addListener(_onTabAnimationChanged);
+  }
+
+  void _onTabAnimationChanged() {
+    final animation = _tabController.animation;
+    if (animation == null) return;
+
+    final currentIndex = animation.value.round();
+
+    if (currentIndex == _lastTabIndex) return;
+
+    _lastTabIndex = currentIndex;
+
+    FocusManager.instance.primaryFocus?.unfocus();
+  }
+
+  @override
+  void dispose() {
+    _tabController.animation?.removeListener(_onTabAnimationChanged);
+    _tabController.dispose();
+
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) => DefaultTabController(
@@ -179,9 +216,10 @@ class _InspectorState extends State<_Inspector> {
             label: const Text('Clear'),
           ),
         ],
-        bottom: const TabBar(
+        bottom: TabBar(
+          controller: _tabController,
           tabAlignment: TabAlignment.fill,
-          tabs: <Widget>[
+          tabs: const <Widget>[
             Tab(
               icon: Icon(Icons.timeline, size: 18),
               text: 'Timeline',
@@ -205,25 +243,33 @@ class _InspectorState extends State<_Inspector> {
         animation: widget.controller.changes,
         builder: (context, _) {
           final events = widget.controller.events;
-          return Column(
-            children: <Widget>[
-              SessionSummary(
-                events: events,
-                currentRoute: widget.controller.currentRoute,
-              ),
-              QaSessionMessage(message: widget.message),
-              const SizedBox(height: 6),
-              Expanded(
-                child: TabBarView(
-                  children: <Widget>[
-                    TimelineTab(events: events),
-                    ApisTab(events: events),
-                    RoutesTab(events: events),
-                    NotesTab(controller: widget.controller),
-                  ],
+
+          return GestureDetector(
+            behavior: HitTestBehavior.translucent,
+            onTap: () {
+              FocusManager.instance.primaryFocus?.unfocus();
+            },
+            child: Column(
+              children: <Widget>[
+                SessionSummary(
+                  events: events,
+                  currentRoute: widget.controller.currentRoute,
                 ),
-              ),
-            ],
+                QaSessionMessage(message: widget.message),
+                const SizedBox(height: 6),
+                Expanded(
+                  child: TabBarView(
+                    controller: _tabController,
+                    children: <Widget>[
+                      TimelineTab(events: events),
+                      ApisTab(events: events),
+                      RoutesTab(events: events),
+                      NotesTab(controller: widget.controller),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           );
         },
       ),
@@ -235,45 +281,61 @@ class _InspectorState extends State<_Inspector> {
     _ReportAction action,
   ) async {
     if (!widget.controller.config.enabled) return;
+
     const limits = QaReportLimits();
+
     final data = const QaReportBuilder(limits: limits).build(
       events: widget.controller.events,
       notes: widget.controller.notes,
       currentRoute: widget.controller.currentRoute,
       generatedAt: DateTime.now(),
     );
+
     if (action == _ReportAction.copy) {
       final bounded = const QaReportTextRenderer().renderForClipboard(
         data,
         maxCharacters: limits.maxClipboardCharacters,
       );
+
       try {
         await Clipboard.setData(ClipboardData(text: bounded));
-        if (context.mounted) _showMessage(context, 'QA report copied.');
+
+        if (context.mounted) {
+          _showMessage(context, 'QA report copied.');
+        }
       } catch (_) {
         if (context.mounted) {
           _showMessage(context, 'The QA report could not be copied.');
         }
       }
+
       return;
     }
+
     if (_isExportingPng) return;
+
     setState(() => _isExportingPng = true);
+
     try {
       final exporter =
           widget.reportExporter ??
           const QaReportImageExporter(limits: limits).export;
+
       late final QaReportExportResult result;
+
       try {
         result = await exporter(context, data);
       } catch (_) {
         if (context.mounted) {
           _showMessage(context, 'The PNG report could not be generated.');
         }
+
         return;
       }
+
       final bytes = result.bytes;
       final filename = result.filename;
+
       if (bytes == null || filename == null) {
         if (context.mounted) {
           _showMessage(
@@ -281,14 +343,20 @@ class _InspectorState extends State<_Inspector> {
             result.errorMessage ?? 'The PNG report could not be generated.',
           );
         }
+
         return;
       }
+
       if (!context.mounted) return;
+
       final renderObject = context.findRenderObject();
+
       final origin = renderObject is RenderBox && renderObject.hasSize
           ? renderObject.localToGlobal(Offset.zero) & renderObject.size
           : const Rect.fromLTWH(0, 0, 1, 1);
+
       late final QaReportShareResult shareResult;
+
       try {
         shareResult = await widget.reportSharer.share(
           bytes: bytes,
@@ -299,18 +367,24 @@ class _InspectorState extends State<_Inspector> {
         if (context.mounted) {
           _showMessage(context, 'The report could not be shared.');
         }
+
         return;
       }
+
       if (!context.mounted || shareResult.isSuccess) return;
+
       final message = switch (shareResult.status) {
         QaReportShareStatus.preparationFailed ||
         QaReportShareStatus.writeFailed =>
           'The report file could not be prepared.',
         _ => 'The report could not be shared.',
       };
+
       _showMessage(context, message);
     } finally {
-      if (mounted) setState(() => _isExportingPng = false);
+      if (mounted) {
+        setState(() => _isExportingPng = false);
+      }
     }
   }
 
@@ -345,7 +419,10 @@ class _InspectorState extends State<_Inspector> {
         ],
       ),
     );
-    if (clear == true) widget.controller.clearSession();
+
+    if (clear == true) {
+      widget.controller.clearSession();
+    }
   }
 }
 

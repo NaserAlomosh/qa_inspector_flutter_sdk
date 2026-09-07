@@ -36,9 +36,11 @@ class _UserPostsScreenState extends State<UserPostsScreen> {
       if (mounted) setState(() => _posts = posts);
     } on DioException catch (error) {
       if (mounted) {
-        setState(() => _error = error.response?.statusCode == null
-            ? 'Could not load posts. Check your connection and try again.'
-            : 'Could not load posts (HTTP ${error.response!.statusCode}).');
+        setState(
+          () => _error = error.response?.statusCode == null
+              ? 'Could not load posts. Check your connection and try again.'
+              : 'Could not load posts (HTTP ${error.response!.statusCode}).',
+        );
       }
     }
   }
@@ -49,7 +51,9 @@ class _UserPostsScreenState extends State<UserPostsScreen> {
       final id = await widget.api.createPost(widget.user.id);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('POST /posts succeeded · id: ${id ?? 'unknown'}')),
+          SnackBar(
+            content: Text('POST /posts succeeded · id: ${id ?? 'unknown'}'),
+          ),
         );
       }
     } on DioException catch (error) {
@@ -72,33 +76,35 @@ class _UserPostsScreenState extends State<UserPostsScreen> {
     return Scaffold(
       appBar: AppBar(title: Text('${widget.user.name} · Posts')),
       body: switch ((_posts, _error)) {
-        (_, final String error) =>
-          ErrorState(message: error, onRetry: _loadPosts),
+        (_, final String error) => ErrorState(
+          message: error,
+          onRetry: _loadPosts,
+        ),
         (final List<ExamplePost> posts, _) => ListView.builder(
-            padding: const EdgeInsets.fromLTRB(12, 12, 12, 88),
-            itemCount: posts.length,
-            itemBuilder: (context, index) {
-              final post = posts[index];
-              return Card(
-                child: ListTile(
-                  title: Text(post.title),
-                  subtitle: Text(
-                    post.body,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () => Navigator.of(context).push<void>(
-                    MaterialPageRoute<void>(
-                      settings: RouteSettings(name: '/posts/${post.id}'),
-                      builder: (_) =>
-                          PostDetailsScreen(api: widget.api, post: post),
-                    ),
+          padding: const EdgeInsets.fromLTRB(12, 12, 12, 88),
+          itemCount: posts.length,
+          itemBuilder: (context, index) {
+            final post = posts[index];
+            return Card(
+              child: ListTile(
+                title: Text(post.title),
+                subtitle: Text(
+                  post.body,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => Navigator.of(context).push<void>(
+                  MaterialPageRoute<void>(
+                    settings: RouteSettings(name: '/posts/${post.id}'),
+                    builder: (_) =>
+                        PostDetailsScreen(api: widget.api, post: post),
                   ),
                 ),
-              );
-            },
-          ),
+              ),
+            );
+          },
+        ),
         _ => const Center(child: CircularProgressIndicator()),
       },
       floatingActionButton: FloatingActionButton.extended(

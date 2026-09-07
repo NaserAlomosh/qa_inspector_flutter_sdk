@@ -68,7 +68,10 @@ final class QaReportBuilder {
       );
     }
 
-    final assignments = List.generate(routes.length, (_) => <_IndexedNetwork>[]);
+    final assignments = List.generate(
+      routes.length,
+      (_) => <_IndexedNetwork>[],
+    );
     for (final network in networks) {
       if (routes.isEmpty) break;
       final index = _visitFor(network.event, routes);
@@ -93,8 +96,13 @@ final class QaReportBuilder {
     for (var i = 0; i < visibleVisits.length; i++) {
       final visit = visibleVisits[i];
       final allApis = assignments[i];
-      final take = remainingApis < allApis.length ? remainingApis : allApis.length;
-      final reportApis = allApis.take(take).map((item) => _api(item.event)).toList();
+      final take = remainingApis < allApis.length
+          ? remainingApis
+          : allApis.length;
+      final reportApis = allApis
+          .take(take)
+          .map((item) => _api(item.event))
+          .toList();
       remainingApis -= take;
       omittedApis += allApis.length - take;
       final next = i + 1 < routes.length ? routes[i + 1] : null;
@@ -125,7 +133,9 @@ final class QaReportBuilder {
 
     return QaReportData(
       generatedAt: generatedAt,
-      currentRoute: _route(currentRoute ?? (routes.isEmpty ? null : routes.last.route)),
+      currentRoute: _route(
+        currentRoute ?? (routes.isEmpty ? null : routes.last.route),
+      ),
       notes: _limitText(notes),
       steps: steps,
       totalScreens: totalScreens,
@@ -143,10 +153,14 @@ final class QaReportBuilder {
     for (var i = 0; i < visits.length; i++) {
       if (visits[i].route == route) matching.add(i);
     }
-    final candidates = matching.isEmpty ? List.generate(visits.length, (i) => i) : matching;
+    final candidates = matching.isEmpty
+        ? List.generate(visits.length, (i) => i)
+        : matching;
     for (final index in candidates) {
       final start = visits[index].enteredAt;
-      final end = index + 1 < visits.length ? visits[index + 1].enteredAt : null;
+      final end = index + 1 < visits.length
+          ? visits[index + 1].enteredAt
+          : null;
       final afterStart = start == null || !event.startedAt.isBefore(start);
       final beforeEnd = end == null || event.startedAt.isBefore(end);
       if (afterStart && beforeEnd) return index;
@@ -197,7 +211,10 @@ final class QaReportBuilder {
     if (value is Map) {
       final keys = value.keys.map((key) => key.toString()).toList()..sort();
       return <String, Object?>{
-        for (final key in keys) key: _sorted(value.entries.firstWhere((e) => e.key.toString() == key).value),
+        for (final key in keys)
+          key: _sorted(
+            value.entries.firstWhere((e) => e.key.toString() == key).value,
+          ),
       };
     }
     if (value is Iterable) return value.map(_sorted).toList(growable: false);
@@ -205,7 +222,8 @@ final class QaReportBuilder {
     return value.toString();
   }
 
-  String _route(String? value) => value == null || value.trim().isEmpty ? unknownRoute : value;
+  String _route(String? value) =>
+      value == null || value.trim().isEmpty ? unknownRoute : value;
 
   String _screenName(String route) {
     if (route == unknownRoute) return route;
@@ -216,7 +234,12 @@ final class QaReportBuilder {
 }
 
 final class _Visit {
-  const _Visit({required this.route, required this.enteredAt, required this.enteredFrom, required this.enteredBy});
+  const _Visit({
+    required this.route,
+    required this.enteredAt,
+    required this.enteredFrom,
+    required this.enteredBy,
+  });
   final String route;
   final DateTime? enteredAt;
   final String? enteredFrom;

@@ -23,8 +23,10 @@ final class QaReportExportResult {
 
   /// Encoded PNG bytes on success.
   final Uint8List? bytes;
+
   /// Suggested deterministic filename on success.
   final String? filename;
+
   /// User-readable failure message.
   final String? errorMessage;
 
@@ -50,7 +52,9 @@ final class QaReportImageExporter {
     }
     final overlay = Overlay.maybeOf(context, rootOverlay: true);
     if (overlay == null) {
-      return QaReportExportResult.failure('PNG export is unavailable in this view.');
+      return QaReportExportResult.failure(
+        'PNG export is unavailable in this view.',
+      );
     }
 
     final key = GlobalKey();
@@ -86,18 +90,28 @@ final class QaReportImageExporter {
       await WidgetsBinding.instance.endOfFrame;
       final boundary = key.currentContext?.findRenderObject();
       if (boundary is! RenderRepaintBoundary || !boundary.hasSize) {
-        return QaReportExportResult.failure('The PNG report could not be rendered.');
+        return QaReportExportResult.failure(
+          'The PNG report could not be rendered.',
+        );
       }
       final size = boundary.size;
-      if (size.width > limits.maxImageWidth || size.height > limits.maxImageHeight) {
+      if (size.width > limits.maxImageWidth ||
+          size.height > limits.maxImageHeight) {
         return QaReportExportResult.failure(
           'The report is too large to export safely. Reduce the session size and try again.',
         );
       }
-      final pixelCount = size.width * size.height * limits.pixelRatio * limits.pixelRatio;
-      final maxPixels = limits.maxImageWidth * limits.maxImageHeight * limits.pixelRatio * limits.pixelRatio;
+      final pixelCount =
+          size.width * size.height * limits.pixelRatio * limits.pixelRatio;
+      final maxPixels =
+          limits.maxImageWidth *
+          limits.maxImageHeight *
+          limits.pixelRatio *
+          limits.pixelRatio;
       if (pixelCount > maxPixels) {
-        return QaReportExportResult.failure('The PNG report dimensions are unsafe.');
+        return QaReportExportResult.failure(
+          'The PNG report dimensions are unsafe.',
+        );
       }
       final image = await boundary.toImage(pixelRatio: limits.pixelRatio);
       try {
@@ -106,14 +120,19 @@ final class QaReportImageExporter {
           return QaReportExportResult.failure('PNG encoding failed.');
         }
         return QaReportExportResult.success(
-          byteData.buffer.asUint8List(byteData.offsetInBytes, byteData.lengthInBytes),
+          byteData.buffer.asUint8List(
+            byteData.offsetInBytes,
+            byteData.lengthInBytes,
+          ),
           qaReportPngFilename(data.generatedAt),
         );
       } finally {
         image.dispose();
       }
     } catch (_) {
-      return QaReportExportResult.failure('The PNG report could not be generated safely.');
+      return QaReportExportResult.failure(
+        'The PNG report could not be generated safely.',
+      );
     } finally {
       entry.remove();
       entry.dispose();

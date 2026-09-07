@@ -25,7 +25,11 @@ class ApiDetails extends StatelessWidget {
   Widget build(BuildContext context) {
     final request = prettyValue(event.requestBody.data);
     final response = prettyValue(event.responseBody.data);
-    final details = formatFullApiDetails(event, request: request, response: response);
+    final details = formatFullApiDetails(
+      event,
+      request: request,
+      response: response,
+    );
     return Scaffold(
       key: const Key('qa-api-details'),
       appBar: AppBar(
@@ -49,7 +53,8 @@ class ApiDetails extends StatelessWidget {
         children: <Widget>[
           _DetailSection(
             title: 'General',
-            value: 'Method: ${event.method}\nURL: ${event.url}\nRoute: ${formatRoute(event.route)}\n'
+            value:
+                'Method: ${event.method}\nURL: ${event.url}\nRoute: ${formatRoute(event.route)}\n'
                 'Status: ${event.statusCode ?? '—'}\nOutcome: ${event.outcome.name}\n'
                 'Started: ${event.startedAt.toIso8601String()}\nCompleted: ${event.completedAt.toIso8601String()}\n'
                 'Duration: ${event.duration.inMilliseconds} ms\n'
@@ -59,7 +64,8 @@ class ApiDetails extends StatelessWidget {
           ),
           _DetailSection(
             title: 'Headers',
-            value: 'Request\n${prettyValue(event.requestHeaders)}\n\nResponse\n${prettyValue(event.responseHeaders)}',
+            value:
+                'Request\n${prettyValue(event.requestHeaders)}\n\nResponse\n${prettyValue(event.responseHeaders)}',
           ),
           _DetailSection(
             title: 'Request',
@@ -87,7 +93,12 @@ class ApiDetails extends StatelessWidget {
 }
 
 class _DetailSection extends StatelessWidget {
-  const _DetailSection({required this.title, required this.value, this.copyKey, this.copyValue});
+  const _DetailSection({
+    required this.title,
+    required this.value,
+    this.copyKey,
+    this.copyValue,
+  });
 
   final String title;
   final String value;
@@ -109,7 +120,12 @@ class _DetailSection extends StatelessWidget {
         children: <Widget>[
           Row(
             children: <Widget>[
-              Expanded(child: Text(title, style: Theme.of(context).textTheme.titleMedium)),
+              Expanded(
+                child: Text(
+                  title,
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+              ),
               if (copyValue != null)
                 IconButton(
                   key: copyKey,
@@ -143,6 +159,8 @@ Future<void> _copy(BuildContext context, String value) async {
       : '${value.substring(0, maxCopyLength)}\n[copy truncated]';
   await Clipboard.setData(ClipboardData(text: bounded));
   if (context.mounted) {
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Copied sanitized data')));
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Copied sanitized data')));
   }
 }

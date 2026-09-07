@@ -3,7 +3,8 @@ import 'dart:convert';
 import '../../events/qa_network_event.dart';
 
 /// Returns the display fallback for an unnamed [route].
-String formatRoute(String? route) => route == null || route.trim().isEmpty ? '<unnamed>' : route;
+String formatRoute(String? route) =>
+    route == null || route.trim().isEmpty ? '<unnamed>' : route;
 
 /// Formats [value] as a time including milliseconds.
 String formatTime(DateTime value) =>

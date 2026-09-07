@@ -58,27 +58,19 @@ void main() {
     });
 
     test('returns a stable immutable snapshot', () {
-      final timeline = QaEventTimeline(maxEvents: 3)
-        ..add(eventWithIndex(0));
+      final timeline = QaEventTimeline(maxEvents: 3)..add(eventWithIndex(0));
       final snapshot = timeline.snapshot();
 
       timeline.add(eventWithIndex(1));
 
       expect(snapshot.map((event) => event.id), <String>['0']);
-      expect(
-        () => snapshot.add(eventWithIndex(2)),
-        throwsUnsupportedError,
-      );
+      expect(() => snapshot.add(eventWithIndex(2)), throwsUnsupportedError);
     });
 
     test('does not expose its mutable collection through events', () {
-      final timeline = QaEventTimeline(maxEvents: 3)
-        ..add(eventWithIndex(0));
+      final timeline = QaEventTimeline(maxEvents: 3)..add(eventWithIndex(0));
 
-      expect(
-        () => timeline.events.clear(),
-        throwsUnsupportedError,
-      );
+      expect(() => timeline.events.clear(), throwsUnsupportedError);
       expect(timeline.events, hasLength(1));
     });
 

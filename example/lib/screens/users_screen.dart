@@ -37,10 +37,9 @@ class _UsersScreenState extends State<UsersScreen> {
     }
   }
 
-  String _message(DioException error) =>
-      error.response?.statusCode == null
-          ? 'Could not load users. Check your connection and try again.'
-          : 'Could not load users (HTTP ${error.response!.statusCode}).';
+  String _message(DioException error) => error.response?.statusCode == null
+      ? 'Could not load users. Check your connection and try again.'
+      : 'Could not load users (HTTP ${error.response!.statusCode}).';
 
   @override
   Widget build(BuildContext context) {
@@ -56,29 +55,32 @@ class _UsersScreenState extends State<UsersScreen> {
         ],
       ),
       body: switch ((_users, _error)) {
-        (_, final String error) =>
-          ErrorState(message: error, onRetry: _loadUsers),
+        (_, final String error) => ErrorState(
+          message: error,
+          onRetry: _loadUsers,
+        ),
         (final List<ExampleUser> users, _) => ListView.separated(
-            padding: const EdgeInsets.all(12),
-            itemCount: users.length,
-            separatorBuilder: (_, _) => const SizedBox(height: 8),
-            itemBuilder: (context, index) {
-              final user = users[index];
-              return Card(
-                child: ListTile(
-                  title: Text(user.name),
-                  subtitle: Text(user.email),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () => Navigator.of(context).push<void>(
-                    MaterialPageRoute<void>(
-                      settings: RouteSettings(name: '/users/${user.id}'),
-                      builder: (_) => UserPostsScreen(api: widget.api, user: user),
-                    ),
+          padding: const EdgeInsets.all(12),
+          itemCount: users.length,
+          separatorBuilder: (_, _) => const SizedBox(height: 8),
+          itemBuilder: (context, index) {
+            final user = users[index];
+            return Card(
+              child: ListTile(
+                title: Text(user.name),
+                subtitle: Text(user.email),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => Navigator.of(context).push<void>(
+                  MaterialPageRoute<void>(
+                    settings: RouteSettings(name: '/users/${user.id}'),
+                    builder: (_) =>
+                        UserPostsScreen(api: widget.api, user: user),
                   ),
                 ),
-              );
-            },
-          ),
+              ),
+            );
+          },
+        ),
         _ => const Center(child: CircularProgressIndicator()),
       },
     );

@@ -59,8 +59,9 @@ final class QaRouteObserver extends NavigatorObserver {
     _safelyObserve(() {
       final fromRoute = _resolve(route);
       final toRoute = previousRoute == null ? null : _resolve(previousRoute);
-      _currentRouteIdentity =
-          previousRoute == null ? null : identityHashCode(previousRoute);
+      _currentRouteIdentity = previousRoute == null
+          ? null
+          : identityHashCode(previousRoute);
       _currentRouteName = toRoute;
       _recordIfTracked(
         route: route,
@@ -76,11 +77,13 @@ final class QaRouteObserver extends NavigatorObserver {
     _safelyObserve(() {
       final fromRoute = oldRoute == null ? null : _resolve(oldRoute);
       final toRoute = newRoute == null ? null : _resolve(newRoute);
-      final replacedCurrent = oldRoute == null ||
+      final replacedCurrent =
+          oldRoute == null ||
           _currentRouteIdentity == identityHashCode(oldRoute);
       if (replacedCurrent) {
-        _currentRouteIdentity =
-            newRoute == null ? null : identityHashCode(newRoute);
+        _currentRouteIdentity = newRoute == null
+            ? null
+            : identityHashCode(newRoute);
         _currentRouteName = toRoute;
       }
       final trackedRoute = newRoute ?? oldRoute;
@@ -101,8 +104,9 @@ final class QaRouteObserver extends NavigatorObserver {
       final fromRoute = _resolve(route);
       final toRoute = previousRoute == null ? null : _resolve(previousRoute);
       if (_currentRouteIdentity == identityHashCode(route)) {
-        _currentRouteIdentity =
-            previousRoute == null ? null : identityHashCode(previousRoute);
+        _currentRouteIdentity = previousRoute == null
+            ? null
+            : identityHashCode(previousRoute);
         _currentRouteName = toRoute;
       }
       _recordIfTracked(

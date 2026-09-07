@@ -109,27 +109,48 @@ void main() {
     controller.dispose();
   });
 
-  testWidgets('message follows locale and remains stable during updates', (tester) async {
+  testWidgets('message follows locale and remains stable during updates', (
+    tester,
+  ) async {
     final controller = _controller();
     await tester.pumpWidget(_localizedHost(controller, const Locale('ar')));
     await tester.tap(find.byKey(const Key('qa-inspector-button')));
     await tester.pumpAndSettle();
 
-    final initial = tester.widget<Text>(find.descendant(of: find.byKey(const Key('qa-session-message')), matching: find.byType(Text))).data;
+    final initial = tester
+        .widget<Text>(
+          find.descendant(
+            of: find.byKey(const Key('qa-session-message')),
+            matching: find.byType(Text),
+          ),
+        )
+        .data;
     expect(initial, matches(RegExp(r'[\u0600-\u06FF]')));
     _addNetwork(controller, id: 'stable', path: '/stable');
     await tester.pump();
     await tester.tap(find.text('Notes'));
     await tester.pumpAndSettle();
-    await tester.enterText(find.byKey(const Key('qa-notes-field')), 'خطوات الاختبار');
+    await tester.enterText(
+      find.byKey(const Key('qa-notes-field')),
+      'خطوات الاختبار',
+    );
     await tester.pump();
-    final after = tester.widget<Text>(find.descendant(of: find.byKey(const Key('qa-session-message')), matching: find.byType(Text))).data;
+    final after = tester
+        .widget<Text>(
+          find.descendant(
+            of: find.byKey(const Key('qa-session-message')),
+            matching: find.byType(Text),
+          ),
+        )
+        .data;
     expect(after, initial);
     expect(tester.takeException(), isNull);
     controller.dispose();
   });
 
-  testWidgets('default inspector theme is dark regardless of host brightness', (tester) async {
+  testWidgets('default inspector theme is dark regardless of host brightness', (
+    tester,
+  ) async {
     final controller = _controller();
     await tester.pumpWidget(
       MaterialApp(
@@ -140,7 +161,9 @@ void main() {
     await tester.tap(find.byKey(const Key('qa-inspector-button')));
     await tester.pumpAndSettle();
 
-    final context = tester.element(find.byKey(const Key('qa-inspector-overlay')));
+    final context = tester.element(
+      find.byKey(const Key('qa-inspector-overlay')),
+    );
     expect(Theme.of(context).brightness, Brightness.dark);
     controller.dispose();
   });
@@ -165,19 +188,25 @@ void main() {
         ),
       ),
     );
-    final button = tester.widget<Material>(find.byKey(const Key('qa-inspector-button')));
+    final button = tester.widget<Material>(
+      find.byKey(const Key('qa-inspector-button')),
+    );
     expect(button.color, isNot(Colors.pink));
     await tester.tap(find.byKey(const Key('qa-inspector-button')));
     await tester.pumpAndSettle();
 
-    final context = tester.element(find.byKey(const Key('qa-inspector-overlay')));
+    final context = tester.element(
+      find.byKey(const Key('qa-inspector-overlay')),
+    );
     expect(Theme.of(context).brightness, Brightness.light);
     expect(Theme.of(context).colorScheme.primary, isNot(Colors.pink));
     expect(Theme.of(context).colorScheme.surface, isNot(Colors.yellow));
     controller.dispose();
   });
 
-  testWidgets('runtime theme changes preserve controller events', (tester) async {
+  testWidgets('runtime theme changes preserve controller events', (
+    tester,
+  ) async {
     final controller = _controller();
     _addRoute(controller, id: 'theme-event');
     Widget app(QaInspectorThemeMode mode) => MaterialApp(
@@ -250,7 +279,9 @@ void main() {
     controller.dispose();
   });
 
-  testWidgets('enabled inspector has one button and keeps host visible', (tester) async {
+  testWidgets('enabled inspector has one button and keeps host visible', (
+    tester,
+  ) async {
     final controller = _controller();
 
     await tester.pumpWidget(_host(controller));
@@ -280,9 +311,9 @@ void main() {
     expect(find.byKey(const Key('host')), findsOneWidget);
     expect(find.byKey(const Key('qa-inspector-button')), findsOneWidget);
     expect(tester.takeException(), isNull);
-    final buttonBottom = tester.getBottomLeft(
-      find.byKey(const Key('qa-inspector-button')),
-    ).dy;
+    final buttonBottom = tester
+        .getBottomLeft(find.byKey(const Key('qa-inspector-button')))
+        .dy;
     expect(buttonBottom, lessThanOrEqualTo(806));
     controller.dispose();
   });
@@ -353,7 +384,9 @@ void main() {
     controller.dispose();
   });
 
-  testWidgets('opens and closes repeatedly without duplicate buttons', (tester) async {
+  testWidgets('opens and closes repeatedly without duplicate buttons', (
+    tester,
+  ) async {
     final controller = _controller();
     await tester.pumpWidget(_host(controller));
 
@@ -373,94 +406,122 @@ void main() {
     controller.dispose();
   });
 
-  testWidgets('timeline displays mixed route and network events in insertion order', (tester) async {
-    final controller = _controller();
-    _addRoute(controller, id: 'route-1', to: '/transfer');
-    _addNetwork(controller, id: 'api-1', path: '/validate');
-    await tester.pumpWidget(_openHost(controller));
-    await tester.tap(find.byKey(const Key('qa-inspector-button')));
-    await tester.pumpAndSettle();
+  testWidgets(
+    'timeline displays mixed route and network events in insertion order',
+    (tester) async {
+      final controller = _controller();
+      _addRoute(controller, id: 'route-1', to: '/transfer');
+      _addNetwork(controller, id: 'api-1', path: '/validate');
+      await tester.pumpWidget(_openHost(controller));
+      await tester.tap(find.byKey(const Key('qa-inspector-button')));
+      await tester.pumpAndSettle();
 
-    expect(find.text('PUSH'), findsOneWidget);
-    expect(find.textContaining('/home → /transfer'), findsOneWidget);
-    expect(find.textContaining('POST /validate'), findsOneWidget);
-    expect(find.textContaining('200 • 182 ms'), findsOneWidget);
-    expect(find.textContaining('/transfer •'), findsOneWidget);
-    controller.dispose();
-  });
+      expect(find.text('PUSH'), findsOneWidget);
+      expect(find.textContaining('/home → /transfer'), findsOneWidget);
+      expect(find.textContaining('POST /validate'), findsOneWidget);
+      expect(find.textContaining('200 • 182 ms'), findsOneWidget);
+      expect(find.textContaining('/transfer •'), findsOneWidget);
+      controller.dispose();
+    },
+  );
 
-  testWidgets('API filters, method search, and route grouping derive from timeline', (tester) async {
-    final controller = _controller();
-    _addNetwork(controller, id: 'success', path: '/accounts', method: 'GET');
-    _addNetwork(controller, id: 'failed', path: '/transfer', outcome: QaNetworkOutcome.failure, status: 500);
-    _addNetwork(controller, id: 'cancelled', path: '/cancel', outcome: QaNetworkOutcome.cancelled, status: null, route: '/home');
-    await tester.pumpWidget(_openHost(controller));
-    await tester.tap(find.byKey(const Key('qa-inspector-button')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('APIs'));
-    await tester.pumpAndSettle();
+  testWidgets(
+    'API filters, method search, and route grouping derive from timeline',
+    (tester) async {
+      final controller = _controller();
+      _addNetwork(controller, id: 'success', path: '/accounts', method: 'GET');
+      _addNetwork(
+        controller,
+        id: 'failed',
+        path: '/transfer',
+        outcome: QaNetworkOutcome.failure,
+        status: 500,
+      );
+      _addNetwork(
+        controller,
+        id: 'cancelled',
+        path: '/cancel',
+        outcome: QaNetworkOutcome.cancelled,
+        status: null,
+        route: '/home',
+      );
+      await tester.pumpWidget(_openHost(controller));
+      await tester.tap(find.byKey(const Key('qa-inspector-button')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('APIs'));
+      await tester.pumpAndSettle();
 
-    expect(find.byKey(const Key('qa-network-success')), findsOneWidget);
-    expect(find.byKey(const Key('qa-network-failed')), findsOneWidget);
-    expect(find.byKey(const Key('qa-network-cancelled')), findsOneWidget);
+      expect(find.byKey(const Key('qa-network-success')), findsOneWidget);
+      expect(find.byKey(const Key('qa-network-failed')), findsOneWidget);
+      expect(find.byKey(const Key('qa-network-cancelled')), findsOneWidget);
 
-    await tester.tap(find.byKey(const Key('qa-filter-failed')));
-    await tester.pump();
-    expect(find.byKey(const Key('qa-network-failed')), findsOneWidget);
-    expect(find.byKey(const Key('qa-network-success')), findsNothing);
+      await tester.tap(find.byKey(const Key('qa-filter-failed')));
+      await tester.pump();
+      expect(find.byKey(const Key('qa-network-failed')), findsOneWidget);
+      expect(find.byKey(const Key('qa-network-success')), findsNothing);
 
-    await tester.tap(find.byKey(const Key('qa-filter-success')));
-    await tester.pump();
-    expect(find.byKey(const Key('qa-network-success')), findsOneWidget);
-    expect(find.byKey(const Key('qa-network-failed')), findsNothing);
+      await tester.tap(find.byKey(const Key('qa-filter-success')));
+      await tester.pump();
+      expect(find.byKey(const Key('qa-network-success')), findsOneWidget);
+      expect(find.byKey(const Key('qa-network-failed')), findsNothing);
 
-    await tester.tap(find.byKey(const Key('qa-filter-cancelled')));
-    await tester.pump();
-    expect(find.byKey(const Key('qa-network-cancelled')), findsOneWidget);
-    expect(find.byKey(const Key('qa-network-success')), findsNothing);
+      await tester.tap(find.byKey(const Key('qa-filter-cancelled')));
+      await tester.pump();
+      expect(find.byKey(const Key('qa-network-cancelled')), findsOneWidget);
+      expect(find.byKey(const Key('qa-network-success')), findsNothing);
 
-    await tester.tap(find.byKey(const Key('qa-filter-all')));
-    await tester.enterText(find.byKey(const Key('qa-api-search')), 'GET');
-    await tester.pump();
-    expect(find.byKey(const Key('qa-network-success')), findsOneWidget);
-    expect(find.byKey(const Key('qa-network-failed')), findsNothing);
+      await tester.tap(find.byKey(const Key('qa-filter-all')));
+      await tester.enterText(find.byKey(const Key('qa-api-search')), 'GET');
+      await tester.pump();
+      expect(find.byKey(const Key('qa-network-success')), findsOneWidget);
+      expect(find.byKey(const Key('qa-network-failed')), findsNothing);
 
-    await tester.enterText(find.byKey(const Key('qa-api-search')), '/cancel');
-    await tester.pump();
-    expect(find.byKey(const Key('qa-network-cancelled')), findsOneWidget);
-    expect(find.text('Originating route'), findsOneWidget);
-    controller.dispose();
-  });
+      await tester.enterText(find.byKey(const Key('qa-api-search')), '/cancel');
+      await tester.pump();
+      expect(find.byKey(const Key('qa-network-cancelled')), findsOneWidget);
+      expect(find.text('Originating route'), findsOneWidget);
+      controller.dispose();
+    },
+  );
 
-  testWidgets('API detail shows successful response, sanitization, error and truncation', (tester) async {
-    final controller = _controller();
-    _addNetwork(controller, id: 'detail', path: '/detail', truncated: true);
-    await tester.pumpWidget(_openHost(controller));
-    await tester.tap(find.byKey(const Key('qa-inspector-button')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('APIs'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('qa-network-detail')));
-    await tester.pumpAndSettle();
+  testWidgets(
+    'API detail shows successful response, sanitization, error and truncation',
+    (tester) async {
+      final controller = _controller();
+      _addNetwork(controller, id: 'detail', path: '/detail', truncated: true);
+      await tester.pumpWidget(_openHost(controller));
+      await tester.tap(find.byKey(const Key('qa-inspector-button')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('APIs'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('qa-network-detail')));
+      await tester.pumpAndSettle();
 
-    expect(find.byKey(const Key('qa-api-details')), findsOneWidget);
-    expect(find.text('General'), findsOneWidget);
-    expect(find.text('Request'), findsOneWidget);
-    expect(find.text('Response'), findsOneWidget);
-    expect(find.textContaining('"password": "***"'), findsOneWidget);
-    expect(find.textContaining('"result": "accepted"'), findsOneWidget);
-    expect(find.textContaining('Payload truncated'), findsWidgets);
-    expect(find.textContaining('No error metadata'), findsOneWidget);
+      expect(find.byKey(const Key('qa-api-details')), findsOneWidget);
+      expect(find.text('General'), findsOneWidget);
+      expect(find.text('Request'), findsOneWidget);
+      expect(find.text('Response'), findsOneWidget);
+      expect(find.textContaining('"password": "***"'), findsOneWidget);
+      expect(find.textContaining('"result": "accepted"'), findsOneWidget);
+      expect(find.textContaining('Payload truncated'), findsWidgets);
+      expect(find.textContaining('No error metadata'), findsOneWidget);
 
-    await tester.tap(find.byKey(const Key('qa-api-details-close')));
-    await tester.pumpAndSettle();
-    expect(find.byKey(const Key('qa-api-details')), findsNothing);
-    controller.dispose();
-  });
+      await tester.tap(find.byKey(const Key('qa-api-details-close')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('qa-api-details')), findsNothing);
+      controller.dispose();
+    },
+  );
 
   testWidgets('failed API detail displays safe error metadata', (tester) async {
     final controller = _controller();
-    _addNetwork(controller, id: 'error', path: '/failure', outcome: QaNetworkOutcome.failure, status: 422);
+    _addNetwork(
+      controller,
+      id: 'error',
+      path: '/failure',
+      outcome: QaNetworkOutcome.failure,
+      status: 422,
+    );
     await tester.pumpWidget(_openHost(controller));
     await tester.tap(find.byKey(const Key('qa-inspector-button')));
     await tester.pumpAndSettle();
@@ -474,7 +535,9 @@ void main() {
     controller.dispose();
   });
 
-  testWidgets('routes tab uses central events and handles unnamed routes', (tester) async {
+  testWidgets('routes tab uses central events and handles unnamed routes', (
+    tester,
+  ) async {
     final controller = _controller();
     _addRoute(controller, id: 'unnamed', from: null, to: null);
     await tester.pumpWidget(_openHost(controller));
@@ -489,7 +552,9 @@ void main() {
     controller.dispose();
   });
 
-  testWidgets('notes support multiline editing and enforce the session limit', (tester) async {
+  testWidgets('notes support multiline editing and enforce the session limit', (
+    tester,
+  ) async {
     final controller = _controller();
     await tester.pumpWidget(_openHost(controller));
     await tester.tap(find.byKey(const Key('qa-inspector-button')));
@@ -497,7 +562,10 @@ void main() {
     await tester.tap(find.text('Notes'));
     await tester.pumpAndSettle();
 
-    await tester.enterText(find.byKey(const Key('qa-notes-field')), 'First line\nSecond line');
+    await tester.enterText(
+      find.byKey(const Key('qa-notes-field')),
+      'First line\nSecond line',
+    );
     expect(controller.notes, 'First line\nSecond line');
     controller.updateNotes(List<String>.filled(5100, 'x').join());
     await tester.pump();
@@ -505,7 +573,9 @@ void main() {
     controller.dispose();
   });
 
-  testWidgets('clear requires confirmation and clears events and notes', (tester) async {
+  testWidgets('clear requires confirmation and clears events and notes', (
+    tester,
+  ) async {
     final controller = _controller();
     _addRoute(controller, id: 'before');
     controller.updateNotes('Reproduction note');
@@ -532,7 +602,9 @@ void main() {
     controller.dispose();
   });
 
-  testWidgets('timeline notifications do not rebuild the host subtree', (tester) async {
+  testWidgets('timeline notifications do not rebuild the host subtree', (
+    tester,
+  ) async {
     final controller = _controller();
     var builds = 0;
     final host = _BuildCounter(onBuild: () => builds++);
@@ -574,7 +646,9 @@ void main() {
     controller.dispose();
   });
 
-  testWidgets('report actions copy a stable sanitized step report', (tester) async {
+  testWidgets('report actions copy a stable sanitized step report', (
+    tester,
+  ) async {
     final controller = _controller();
     _addRoute(controller, id: 'report-route', from: null, to: '/transfer');
     _addNetwork(controller, id: 'report-api', path: '/validate');
@@ -614,8 +688,12 @@ void main() {
     controller.dispose();
   });
 
-  testWidgets('bounded large timeline renders lazily without errors', (tester) async {
-    final controller = QaInspectorController(config: const QaInspectorConfig(enabled: true, maxEvents: 200));
+  testWidgets('bounded large timeline renders lazily without errors', (
+    tester,
+  ) async {
+    final controller = QaInspectorController(
+      config: const QaInspectorConfig(enabled: true, maxEvents: 200),
+    );
     for (var index = 0; index < 250; index++) {
       _addNetwork(controller, id: '$index', path: '/item/$index');
     }
@@ -630,25 +708,21 @@ void main() {
   });
 }
 
-QaInspectorController _controller() => QaInspectorController(
-  config: const QaInspectorConfig(enabled: true),
-);
+QaInspectorController _controller() =>
+    QaInspectorController(config: const QaInspectorConfig(enabled: true));
 
 Widget _host(
   QaInspectorController controller, {
   NavigatorObserver? observer,
   Widget host = const Text('Host child', key: Key('host')),
-}) =>
-    MaterialApp(
-      navigatorObservers: <NavigatorObserver>[
-        ?observer,
-      ],
-      home: Scaffold(body: Center(child: host)),
-      builder: (context, child) => QaInspector(
-        controller: controller,
-        child: child ?? const SizedBox.shrink(),
-      ),
-    );
+}) => MaterialApp(
+  navigatorObservers: <NavigatorObserver>[?observer],
+  home: Scaffold(body: Center(child: host)),
+  builder: (context, child) => QaInspector(
+    controller: controller,
+    child: child ?? const SizedBox.shrink(),
+  ),
+);
 
 Widget _openHost(QaInspectorController controller) => MaterialApp(
   home: const Scaffold(body: Text('Host child', key: Key('host'))),
@@ -720,7 +794,9 @@ void _addNetwork(
         originalSize: truncated ? 60000 : 24,
         capturedSize: truncated ? 48 : 24,
       ),
-      responseHeaders: const <String, Object?>{'content-type': 'application/json'},
+      responseHeaders: const <String, Object?>{
+        'content-type': 'application/json',
+      },
       responseBody: QaPayloadCapture(
         data: const <String, Object?>{'result': 'accepted'},
         isTruncated: truncated,
@@ -736,8 +812,8 @@ void _addNetwork(
       error: outcome == QaNetworkOutcome.failure
           ? const QaNetworkError(type: 'badResponse', message: 'Safe failure')
           : outcome == QaNetworkOutcome.cancelled
-              ? const QaNetworkError(type: 'cancel', message: 'Request cancelled')
-              : null,
+          ? const QaNetworkError(type: 'cancel', message: 'Request cancelled')
+          : null,
     ),
     sessionGeneration: controller.sessionGeneration,
   );

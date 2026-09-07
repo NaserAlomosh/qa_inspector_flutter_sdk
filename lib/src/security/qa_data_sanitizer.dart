@@ -94,10 +94,7 @@ final class QaDataSanitizer {
 
       final sanitizedParameters = <String, List<String>>{};
       for (final entry in uri.queryParametersAll.entries) {
-        sanitizedParameters[entry.key] = _matches(
-          entry.key,
-          _sensitiveKeys,
-        )
+        sanitizedParameters[entry.key] = _matches(entry.key, _sensitiveKeys)
             ? List<String>.filled(entry.value.length, mask)
             : List<String>.of(entry.value);
       }
@@ -109,12 +106,7 @@ final class QaDataSanitizer {
 
   Object? _sanitizeSafely(Object? value, Set<String> sensitiveNames) {
     try {
-      return _sanitize(
-        value,
-        sensitiveNames,
-        HashSet<Object>.identity(),
-        0,
-      );
+      return _sanitize(value, sensitiveNames, HashSet<Object>.identity(), 0);
     } catch (_) {
       return sanitizationFailed;
     }

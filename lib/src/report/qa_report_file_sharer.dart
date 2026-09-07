@@ -32,13 +32,19 @@ final class QaReportShareResult {
   final QaReportShareStatus status;
 
   /// Whether the native share sheet was presented without an SDK failure.
-  bool get isSuccess => status == QaReportShareStatus.shared || status == QaReportShareStatus.dismissed;
+  bool get isSuccess =>
+      status == QaReportShareStatus.shared ||
+      status == QaReportShareStatus.dismissed;
 }
 
 /// Boundary used by the inspector to deliver rendered report bytes.
 abstract interface class QaReportSharer {
   /// Prepares and shares one PNG without throwing platform failures.
-  Future<QaReportShareResult> share({required Uint8List bytes, required String filename, required Rect sharePositionOrigin});
+  Future<QaReportShareResult> share({
+    required Uint8List bytes,
+    required String filename,
+    required Rect sharePositionOrigin,
+  });
 }
 
 /// Supplies the OS-owned temporary directory.
@@ -47,12 +53,16 @@ typedef QaTemporaryDirectoryProvider = Future<Directory> Function();
 /// Presents a prepared file through the platform share UI.
 typedef QaPlatformFileSharer = Future<ShareResult> Function(ShareParams params);
 
-Future<ShareResult> _shareFile(ShareParams params) => SharePlus.instance.share(params);
+Future<ShareResult> _shareFile(ShareParams params) =>
+    SharePlus.instance.share(params);
 
 /// Delivers an already-rendered report through the platform share sheet.
 final class QaReportFileSharer implements QaReportSharer {
   /// Creates a sharer, with replaceable platform boundaries for tests.
-  const QaReportFileSharer({this.temporaryDirectoryProvider = getTemporaryDirectory, this.platformFileSharer = _shareFile});
+  const QaReportFileSharer({
+    this.temporaryDirectoryProvider = getTemporaryDirectory,
+    this.platformFileSharer = _shareFile,
+  });
 
   /// Resolves the directory used for the temporary PNG.
   final QaTemporaryDirectoryProvider temporaryDirectoryProvider;
@@ -61,7 +71,11 @@ final class QaReportFileSharer implements QaReportSharer {
   final QaPlatformFileSharer platformFileSharer;
 
   @override
-  Future<QaReportShareResult> share({required Uint8List bytes, required String filename, required Rect sharePositionOrigin}) async {
+  Future<QaReportShareResult> share({
+    required Uint8List bytes,
+    required String filename,
+    required Rect sharePositionOrigin,
+  }) async {
     final safeFilename = filename.split(RegExp(r'[/\\]')).last;
     if (safeFilename.isEmpty || safeFilename == '.' || safeFilename == '..') {
       return const QaReportShareResult(QaReportShareStatus.preparationFailed);
@@ -74,7 +88,9 @@ final class QaReportFileSharer implements QaReportSharer {
       return const QaReportShareResult(QaReportShareStatus.preparationFailed);
     }
 
-    final file = File('${temporaryDirectory.path}${Platform.pathSeparator}$safeFilename');
+    final file = File(
+      '${temporaryDirectory.path}${Platform.pathSeparator}$safeFilename',
+    );
     try {
       await file.writeAsBytes(bytes, flush: true);
     } catch (_) {
@@ -82,10 +98,12 @@ final class QaReportFileSharer implements QaReportSharer {
     }
 
     try {
-      final result = await platformFileSharer(ShareParams(
-        files: <XFile>[XFile(file.path, mimeType: 'image/png')],
-        sharePositionOrigin: sharePositionOrigin,
-      ));
+      final result = await platformFileSharer(
+        ShareParams(
+          files: <XFile>[XFile(file.path, mimeType: 'image/png')],
+          sharePositionOrigin: sharePositionOrigin,
+        ),
+      );
       final status = switch (result.status) {
         ShareResultStatus.success => QaReportShareStatus.shared,
         ShareResultStatus.dismissed => QaReportShareStatus.dismissed,

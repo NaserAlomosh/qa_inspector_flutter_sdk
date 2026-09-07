@@ -16,9 +16,7 @@ class ExampleApp extends StatefulWidget {
 
 class _ExampleAppState extends State<ExampleApp> {
   late final QaInspectorController _qaController = QaInspectorController(
-    config: const QaInspectorConfig(
-      enabled: bool.fromEnvironment('QA_TOOLS'),
-    ),
+    config: const QaInspectorConfig(enabled: bool.fromEnvironment('QA_TOOLS')),
   );
 
   late final QaRouteObserver _routeObserver = QaRouteObserver(
@@ -48,11 +46,7 @@ class _ExampleAppState extends State<ExampleApp> {
           ),
         );
 
-    _dio.interceptors.add(
-      QaNetworkInterceptor(
-        controller: _qaController,
-      ),
-    );
+    _dio.interceptors.add(QaNetworkInterceptor(controller: _qaController));
   }
 
   @override
@@ -74,18 +68,12 @@ class _ExampleAppState extends State<ExampleApp> {
       title: 'QA Inspector Example',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.indigo,
-        ),
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.indigo),
         useMaterial3: true,
       ),
-      navigatorObservers: <NavigatorObserver>[
-        _routeObserver,
-      ],
+      navigatorObservers: <NavigatorObserver>[_routeObserver],
       initialRoute: '/',
-      home: UsersScreen(
-        api: api,
-      ),
+      home: UsersScreen(api: api),
       builder: (context, child) {
         return QaInspector(
           controller: _qaController,

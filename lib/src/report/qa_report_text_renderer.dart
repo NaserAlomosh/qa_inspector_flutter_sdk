@@ -30,7 +30,9 @@ final class QaReportTextRenderer {
         ..writeln('[${data.omittedApis} additional APIs omitted]');
     }
     if (data.steps.isEmpty) {
-      out..writeln()..writeln('No screen or API activity captured.');
+      out
+        ..writeln()
+        ..writeln('No screen or API activity captured.');
     }
     for (final step in data.steps) {
       out
@@ -41,18 +43,28 @@ final class QaReportTextRenderer {
         ..writeln()
         ..writeln('Screen: ${step.screen}')
         ..writeln('Route: ${step.route}')
-        ..writeln('Entered At: ${step.enteredAt?.toIso8601String() ?? 'Unknown'}')
+        ..writeln(
+          'Entered At: ${step.enteredAt?.toIso8601String() ?? 'Unknown'}',
+        )
         ..writeln('Entered From: ${step.enteredFrom ?? 'None'}')
-        ..writeln('Navigation: ${step.enteredBy?.name.toUpperCase() ?? 'Initial'}')
+        ..writeln(
+          'Navigation: ${step.enteredBy?.name.toUpperCase() ?? 'Initial'}',
+        )
         ..writeln()
-        ..writeln('APIs Triggered: ${step.apis.isEmpty ? 'None' : step.apis.length}');
+        ..writeln(
+          'APIs Triggered: ${step.apis.isEmpty ? 'None' : step.apis.length}',
+        );
       for (var i = 0; i < step.apis.length; i++) {
         _writeApi(out, step.apis[i], i + 1);
       }
       if (step.omittedApis > 0) {
-        out..writeln()..writeln('[${step.omittedApis} additional APIs omitted]');
+        out
+          ..writeln()
+          ..writeln('[${step.omittedApis} additional APIs omitted]');
       }
-      out..writeln()..writeln('NEXT ACTION:');
+      out
+        ..writeln()
+        ..writeln('NEXT ACTION:');
       final navigation = step.nextNavigation;
       if (navigation == null) {
         out
@@ -92,13 +104,18 @@ final class QaReportTextRenderer {
       ..writeln('Request:')
       ..writeln(api.requestBody);
     if (api.requestTruncated) out.writeln('[request truncated]');
-    out..writeln()..writeln('Response:')..writeln(api.responseBody);
+    out
+      ..writeln()
+      ..writeln('Response:')
+      ..writeln(api.responseBody);
     if (api.responseTruncated) out.writeln('[response truncated]');
     if (api.errorType != null || api.errorMessage != null) {
       out
         ..writeln()
         ..writeln('Error:')
-        ..writeln([api.errorType, api.errorMessage].whereType<String>().join(': '));
+        ..writeln(
+          [api.errorType, api.errorMessage].whereType<String>().join(': '),
+        );
     }
   }
 
