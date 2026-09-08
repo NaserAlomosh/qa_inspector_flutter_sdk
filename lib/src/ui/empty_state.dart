@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'theme/qa_theme.dart';
+
 class EmptyState extends StatelessWidget {
   const EmptyState(
     this.title, {
@@ -12,13 +14,15 @@ class EmptyState extends StatelessWidget {
   final IconData icon;
 
   @override
-  Widget build(BuildContext context) => Center(
+  Widget build(BuildContext context) {
+    final colors = QaTheme.colorsOf(context);
+    return Center(
     child: Padding(
       padding: const EdgeInsets.all(24),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
-          Icon(icon, size: 30, color: Theme.of(context).colorScheme.outline),
+          Icon(icon, size: 30, color: colors.textSecondary),
           const SizedBox(height: 10),
           Text(
             title,
@@ -31,12 +35,13 @@ class EmptyState extends StatelessWidget {
               message!,
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Theme.of(context).colorScheme.outline,
+                color: colors.textSecondary,
               ),
             ),
           ],
         ],
       ),
     ),
-  );
+    );
+  }
 }

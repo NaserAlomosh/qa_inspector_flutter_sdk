@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../events/qa_route_event.dart';
-import '../theme/qa_colors.dart';
+import '../theme/qa_theme.dart';
 import '../utils/presentation_formatters.dart';
 
 class RouteTile extends StatelessWidget {
@@ -18,9 +18,8 @@ class RouteTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = Theme.of(context).brightness == Brightness.dark
-        ? QaColors.navigationDark
-        : QaColors.navigation;
+    final colors = QaTheme.colorsOf(context);
+    final color = colors.navigation;
     return Semantics(
       label:
           '${event.action.name} from ${formatRoute(event.fromRoute)} to ${formatRoute(event.toRoute)}',
@@ -32,7 +31,7 @@ class RouteTile extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           decoration: BoxDecoration(
             border: Border(
-              bottom: BorderSide(color: Theme.of(context).dividerColor),
+              bottom: BorderSide(color: colors.border),
             ),
           ),
           child: Row(
@@ -55,20 +54,28 @@ class RouteTile extends StatelessWidget {
                       const SizedBox(height: 4),
                       Text(
                         '${formatRoute(event.fromRoute)} → ${formatRoute(event.toRoute)}',
-                        style: Theme.of(context).textTheme.titleMedium,
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(color: colors.textPrimary),
                       ),
                       const SizedBox(height: 3),
                       Text(
                         '${showCurrent ? 'Current: ${formatRoute(event.currentRoute)} • ' : ''}${formatTime(event.timestamp)}',
                         style: Theme.of(
                           context,
-                        ).textTheme.bodyMedium?.copyWith(color: QaColors.slate),
+                        ).textTheme.bodyMedium?.copyWith(
+                          color: colors.textSecondary,
+                        ),
                       ),
                     ],
                   ),
                 ),
               ),
-              if (onTap != null) const Icon(Icons.chevron_right, size: 20),
+              if (onTap != null)
+                Icon(
+                  Icons.chevron_right,
+                  size: 20,
+                  color: colors.textSecondary,
+                ),
             ],
           ),
         ),

@@ -2,8 +2,8 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 
-import 'theme/qa_colors.dart';
 import 'theme/qa_spacing.dart';
+import 'theme/qa_theme.dart';
 
 const qaEnglishMessages = <String>[
   'Every bug you catch saves someone a headache.',
@@ -122,38 +122,36 @@ class QaSessionMessage extends StatelessWidget {
   final String message;
 
   @override
-  Widget build(BuildContext context) => Container(
-    key: const Key('qa-session-message'),
-    margin: const EdgeInsets.fromLTRB(
-      QaSpacing.lg,
-      QaSpacing.sm,
-      QaSpacing.lg,
-      0,
-    ),
-    padding: const EdgeInsets.symmetric(
-      horizontal: QaSpacing.md,
-      vertical: QaSpacing.sm,
-    ),
-    decoration: BoxDecoration(
-      color: Theme.of(
-        context,
-      ).colorScheme.primaryContainer.withValues(alpha: 0.45),
-      borderRadius: BorderRadius.circular(10),
-    ),
-    child: Row(
-      children: <Widget>[
-        Icon(
-          Icons.verified_outlined,
-          size: 17,
-          color: Theme.of(context).brightness == Brightness.dark
-              ? QaColors.accentDark
-              : QaColors.accent,
-        ),
-        const SizedBox(width: QaSpacing.sm),
-        Expanded(
-          child: Text(message, style: Theme.of(context).textTheme.bodyMedium),
-        ),
-      ],
-    ),
-  );
+  Widget build(BuildContext context) {
+    final colors = QaTheme.colorsOf(context);
+    return Container(
+      key: const Key('qa-session-message'),
+      margin: const EdgeInsets.fromLTRB(
+        QaSpacing.lg,
+        QaSpacing.sm,
+        QaSpacing.lg,
+        0,
+      ),
+      padding: const EdgeInsets.symmetric(
+        horizontal: QaSpacing.md,
+        vertical: QaSpacing.sm,
+      ),
+      decoration: BoxDecoration(
+        color: colors.accent.withValues(alpha: 0.14),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Row(
+        children: <Widget>[
+          Icon(Icons.verified_outlined, size: 17, color: colors.accent),
+          const SizedBox(width: QaSpacing.sm),
+          Expanded(
+            child: Text(
+              message,
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }

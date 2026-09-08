@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../events/qa_network_event.dart';
+import '../theme/qa_theme.dart';
 import '../utils/presentation_formatters.dart';
 
 /// Opens the details view for a sanitized network event.
@@ -109,50 +110,53 @@ class _DetailSection extends StatelessWidget {
   final String? copyValue;
 
   @override
-  Widget build(BuildContext context) => Container(
-    margin: const EdgeInsets.only(bottom: 12),
-    decoration: BoxDecoration(
-      color: Theme.of(context).colorScheme.surface,
-      borderRadius: BorderRadius.circular(12),
-      border: Border.all(color: Theme.of(context).dividerColor),
-    ),
-    child: Padding(
-      padding: const EdgeInsets.all(12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: <Widget>[
-          Row(
-            children: <Widget>[
-              Expanded(
-                child: Text(
-                  title,
-                  style: Theme.of(context).textTheme.titleMedium,
+  Widget build(BuildContext context) {
+    final colors = QaTheme.colorsOf(context);
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: colors.surface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: colors.border),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: <Widget>[
+            Row(
+              children: <Widget>[
+                Expanded(
+                  child: Text(
+                    title,
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
                 ),
-              ),
-              if (copyValue != null)
-                IconButton(
-                  key: copyKey,
-                  tooltip: 'Copy $title',
-                  onPressed: () => _copy(context, copyValue!),
-                  icon: const Icon(Icons.copy),
+                if (copyValue != null)
+                  IconButton(
+                    key: copyKey,
+                    tooltip: 'Copy $title',
+                    onPressed: () => _copy(context, copyValue!),
+                    icon: const Icon(Icons.copy),
+                  ),
+              ],
+            ),
+            Directionality(
+              textDirection: TextDirection.ltr,
+              child: SelectableText(
+                value,
+                style: const TextStyle(
+                  fontFamily: 'monospace',
+                  fontSize: 12,
+                  height: 1.45,
                 ),
-            ],
-          ),
-          Directionality(
-            textDirection: TextDirection.ltr,
-            child: SelectableText(
-              value,
-              style: const TextStyle(
-                fontFamily: 'monospace',
-                fontSize: 12,
-                height: 1.45,
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
-    ),
-  );
+    );
+  }
 }
 
 Future<void> _copy(BuildContext context, String value) async {

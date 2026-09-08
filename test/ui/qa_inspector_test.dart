@@ -173,6 +173,13 @@ void main() {
     tester,
   ) async {
     final controller = _controller();
+    _addNetwork(
+      controller,
+      id: 'light-pending',
+      path: '/light-pending',
+      outcome: QaNetworkOutcome.pending,
+      status: null,
+    );
     await tester.pumpWidget(
       MaterialApp(
         theme: ThemeData.dark().copyWith(
@@ -192,7 +199,7 @@ void main() {
     final button = tester.widget<Material>(
       find.byKey(const Key('qa-inspector-button')),
     );
-    expect(button.color, isNot(Colors.pink));
+    expect(button.color, QaColors.light.accent);
     await tester.tap(find.byKey(const Key('qa-inspector-button')));
     await tester.pumpAndSettle();
 
@@ -202,6 +209,10 @@ void main() {
     expect(Theme.of(context).brightness, Brightness.light);
     expect(Theme.of(context).colorScheme.primary, isNot(Colors.pink));
     expect(Theme.of(context).colorScheme.surface, isNot(Colors.yellow));
+    expect(
+      tester.widget<Text>(find.text('Pending')).style?.color,
+      QaColors.light.pending,
+    );
     controller.dispose();
   });
 
@@ -210,6 +221,7 @@ void main() {
   ) async {
     final controller = _controller();
     _addRoute(controller, id: 'theme-event');
+    controller.updateNotes('Theme-safe notes');
     Widget app(QaInspectorThemeMode mode) => MaterialApp(
       home: QaInspector(
         controller: controller,
@@ -228,6 +240,38 @@ void main() {
     context = tester.element(find.byKey(const Key('qa-inspector-overlay')));
     expect(Theme.of(context).brightness, Brightness.light);
     expect(controller.events.single.id, 'theme-event');
+    expect(controller.notes, 'Theme-safe notes');
+    controller.dispose();
+  });
+
+  testWidgets('changing only the host theme does not change QA colors', (
+    tester,
+  ) async {
+    final controller = _controller();
+    _addNetwork(
+      controller,
+      id: 'host-change',
+      path: '/host-change',
+      outcome: QaNetworkOutcome.pending,
+      status: null,
+    );
+
+    Widget host(ThemeData theme) => MaterialApp(
+      theme: theme,
+      home: QaInspector(controller: controller, child: const SizedBox()),
+    );
+
+    await tester.pumpWidget(host(ThemeData.light()));
+    await tester.tap(find.byKey(const Key('qa-inspector-button')));
+    await tester.pumpAndSettle();
+    final before = tester.widget<Text>(find.text('Pending')).style?.color;
+
+    await tester.pumpWidget(host(_ridiculousHostTheme(Brightness.dark)));
+    await tester.pumpAndSettle();
+
+    expect(before, QaColors.dark.pending);
+    expect(tester.widget<Text>(find.text('Pending')).style?.color, before);
+    expect(controller.events.single.id, 'host-change');
     controller.dispose();
   });
 
@@ -454,14 +498,24 @@ void main() {
     );
     await tester.pumpWidget(
       MaterialApp(
-        theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.pink),
-        ),
+        theme: _ridiculousHostTheme(Brightness.light),
         home: QaInspector(controller: controller, child: const SizedBox()),
       ),
     );
+    final button = tester.widget<Material>(
+      find.byKey(const Key('qa-inspector-button')),
+    );
+    expect(button.color, QaColors.dark.accent);
+    expect(button.shadowColor, QaColors.dark.shadow);
+    expect((button.shape! as StadiumBorder).side.color, QaColors.dark.buttonBorder);
+
     await tester.tap(find.byKey(const Key('qa-inspector-button')));
     await tester.pumpAndSettle();
+
+    final overlayContext = tester.element(
+      find.byKey(const Key('qa-inspector-overlay')),
+    );
+    expect(Theme.of(overlayContext).scaffoldBackgroundColor, QaColors.dark.background);
 
     expect(
       tester.widget<Text>(find.text('Pending')).style?.color,
@@ -479,6 +533,30 @@ void main() {
       tester.widget<Text>(find.text('Cancelled • 182 ms')).style?.color,
       QaColors.dark.cancelled,
     );
+    final pendingRow = find.byKey(const Key('qa-network-pending-color'));
+    final borderedContainer = find.descendant(
+      of: pendingRow,
+      matching: find.byWidgetPredicate(
+        (widget) =>
+            widget is Container &&
+            widget.decoration is BoxDecoration &&
+            (widget.decoration! as BoxDecoration).border != null,
+      ),
+    );
+    final decoration = tester.widget<Container>(borderedContainer).decoration!
+        as BoxDecoration;
+    expect((decoration.border! as Border).bottom.color, QaColors.dark.border);
+    expect(
+      tester.widget<Text>(find.text('/pending')).style?.color,
+      QaColors.dark.textPrimary,
+    );
+    final secondary = tester.widget<Text>(
+      find.descendant(
+        of: pendingRow,
+        matching: find.textContaining('/transfer •'),
+      ),
+    );
+    expect(secondary.style?.color, QaColors.dark.textSecondary);
     controller.dispose();
   });
 
@@ -964,3 +1042,25 @@ Widget _localizedHost(QaInspectorController controller, Locale locale) =>
         ),
       ),
     );
+
+ThemeData _ridiculousHostTheme(Brightness brightness) => ThemeData(
+  brightness: brightness,
+  primaryColor: Colors.pinkAccent,
+  dividerColor: Colors.greenAccent,
+  scaffoldBackgroundColor: Colors.orange,
+  colorScheme: ColorScheme.fromSeed(
+    seedColor: Colors.pinkAccent,
+    brightness: brightness,
+    surface: Colors.orange,
+  ).copyWith(
+    primary: Colors.pinkAccent,
+    onSurface: Colors.purple,
+    onSurfaceVariant: Colors.purpleAccent,
+    outline: Colors.greenAccent,
+    outlineVariant: Colors.greenAccent,
+  ),
+  textTheme: ThemeData(brightness: brightness).textTheme.apply(
+    bodyColor: Colors.purple,
+    displayColor: Colors.purple,
+  ),
+);

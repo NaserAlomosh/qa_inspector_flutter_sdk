@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../../events/qa_network_event.dart';
-import '../theme/qa_colors.dart';
-import '../theme/qa_inspector_theme_mode.dart';
 import '../theme/qa_theme.dart';
 import '../utils/presentation_formatters.dart';
 
@@ -13,11 +11,7 @@ class NetworkTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = QaTheme.colors(
-      Theme.of(context).brightness == Brightness.dark
-          ? QaInspectorThemeMode.dark
-          : QaInspectorThemeMode.light,
-    );
+    final colors = QaTheme.colorsOf(context);
     final color = switch (event.outcome) {
       QaNetworkOutcome.pending => colors.pending,
       QaNetworkOutcome.success => colors.success,
@@ -44,7 +38,7 @@ class NetworkTile extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
           decoration: BoxDecoration(
             border: Border(
-              bottom: BorderSide(color: Theme.of(context).dividerColor),
+              bottom: BorderSide(color: colors.border),
             ),
           ),
           child: Row(
@@ -89,7 +83,8 @@ class NetworkTile extends StatelessWidget {
                               path,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: Theme.of(context).textTheme.titleMedium,
+                              style: Theme.of(context).textTheme.titleMedium
+                                  ?.copyWith(color: colors.textPrimary),
                             ),
                           ),
                         ],
@@ -108,13 +103,20 @@ class NetworkTile extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                         style: Theme.of(
                           context,
-                        ).textTheme.bodyMedium?.copyWith(color: QaColors.slate),
+                        ).textTheme.bodyMedium?.copyWith(
+                          color: colors.textSecondary,
+                        ),
                       ),
                     ],
                   ),
                 ),
               ),
-              if (onTap != null) const Icon(Icons.chevron_right, size: 20),
+              if (onTap != null)
+                Icon(
+                  Icons.chevron_right,
+                  size: 20,
+                  color: colors.textSecondary,
+                ),
             ],
           ),
         ),

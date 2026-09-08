@@ -104,7 +104,7 @@ abstract final class QaColors {
 
 /// Immutable semantic colors used by QA Inspector presentation.
 @immutable
-final class QaColorTokens {
+final class QaColorTokens extends ThemeExtension<QaColorTokens> {
   /// Creates a complete QA Inspector color palette.
   const QaColorTokens({
     required this.background,
@@ -152,4 +152,74 @@ final class QaColorTokens {
   final Color buttonBorder;
 
   final Color shadow;
+
+  @override
+  QaColorTokens copyWith({
+    Color? background,
+    Color? surface,
+    Color? surfaceElevated,
+    Color? surfaceMuted,
+    Color? border,
+    Color? borderStrong,
+    Color? textPrimary,
+    Color? textSecondary,
+    Color? accent,
+    Color? success,
+    Color? failure,
+    Color? pending,
+    Color? cancelled,
+    Color? navigation,
+    Color? codeBackground,
+    Color? buttonForeground,
+    Color? buttonBorder,
+    Color? shadow,
+  }) => QaColorTokens(
+    background: background ?? this.background,
+    surface: surface ?? this.surface,
+    surfaceElevated: surfaceElevated ?? this.surfaceElevated,
+    surfaceMuted: surfaceMuted ?? this.surfaceMuted,
+    border: border ?? this.border,
+    borderStrong: borderStrong ?? this.borderStrong,
+    textPrimary: textPrimary ?? this.textPrimary,
+    textSecondary: textSecondary ?? this.textSecondary,
+    accent: accent ?? this.accent,
+    success: success ?? this.success,
+    failure: failure ?? this.failure,
+    pending: pending ?? this.pending,
+    cancelled: cancelled ?? this.cancelled,
+    navigation: navigation ?? this.navigation,
+    codeBackground: codeBackground ?? this.codeBackground,
+    buttonForeground: buttonForeground ?? this.buttonForeground,
+    buttonBorder: buttonBorder ?? this.buttonBorder,
+    shadow: shadow ?? this.shadow,
+  );
+
+  @override
+  QaColorTokens lerp(covariant QaColorTokens? other, double t) {
+    if (other == null) return this;
+    return QaColorTokens(
+      background: Color.lerp(background, other.background, t)!,
+      surface: Color.lerp(surface, other.surface, t)!,
+      surfaceElevated: Color.lerp(surfaceElevated, other.surfaceElevated, t)!,
+      surfaceMuted: Color.lerp(surfaceMuted, other.surfaceMuted, t)!,
+      border: Color.lerp(border, other.border, t)!,
+      borderStrong: Color.lerp(borderStrong, other.borderStrong, t)!,
+      textPrimary: Color.lerp(textPrimary, other.textPrimary, t)!,
+      textSecondary: Color.lerp(textSecondary, other.textSecondary, t)!,
+      accent: Color.lerp(accent, other.accent, t)!,
+      success: Color.lerp(success, other.success, t)!,
+      failure: Color.lerp(failure, other.failure, t)!,
+      pending: Color.lerp(pending, other.pending, t)!,
+      cancelled: Color.lerp(cancelled, other.cancelled, t)!,
+      navigation: Color.lerp(navigation, other.navigation, t)!,
+      codeBackground: Color.lerp(codeBackground, other.codeBackground, t)!,
+      buttonForeground: Color.lerp(
+        buttonForeground,
+        other.buttonForeground,
+        t,
+      )!,
+      buttonBorder: Color.lerp(buttonBorder, other.buttonBorder, t)!,
+      shadow: Color.lerp(shadow, other.shadow, t)!,
+    );
+  }
 }
