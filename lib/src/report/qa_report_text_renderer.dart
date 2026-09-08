@@ -96,7 +96,9 @@ final class QaReportTextRenderer {
       ..writeln('${api.method} ${api.path}')
       ..writeln('Status: ${_status(api)}')
       ..writeln('Outcome: ${api.outcome.name.toUpperCase()}')
-      ..writeln('Duration: ${api.duration.inMilliseconds} ms')
+      ..writeln(
+        'Duration: ${api.duration == null ? 'Pending' : '${api.duration!.inMilliseconds} ms'}',
+      )
       ..writeln()
       ..writeln('Query:')
       ..writeln(api.queryParameters)
@@ -120,6 +122,7 @@ final class QaReportTextRenderer {
   }
 
   String _status(QaReportApi api) {
+    if (api.outcome == QaNetworkOutcome.pending) return 'Pending';
     if (api.outcome == QaNetworkOutcome.cancelled) return 'Cancelled';
     return api.statusCode?.toString() ?? 'Unavailable';
   }

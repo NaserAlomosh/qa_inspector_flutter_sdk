@@ -9,6 +9,54 @@ import 'package:qa_inspector/qa_inspector.dart';
 
 void main() {
   group('QaNetworkInterceptor', () {
+    test('publishes a sanitized pending event immediately', () async {
+      final controller = _controller();
+      controller.recordRoute(
+        action: QaRouteAction.push,
+        fromRoute: null,
+        toRoute: '/home',
+        currentRoute: '/home',
+      );
+      controller.clearEvents();
+      final response = Completer<ResponseBody>();
+      final dio = _dio(
+        controller,
+        adapter: _FakeAdapter((_) => response.future),
+      );
+
+      final request = dio.post<void>(
+        '/users',
+        queryParameters: <String, Object?>{'token': 'query-secret'},
+        data: <String, Object?>{'password': 'body-secret'},
+      );
+      await Future<void>.delayed(Duration.zero);
+
+      final pending = controller.events.single as QaNetworkEvent;
+      expect(pending.outcome, QaNetworkOutcome.pending);
+      expect(pending.method, 'POST');
+      expect(pending.path, '/users');
+      expect(pending.route, '/home');
+      expect(pending.startedAt, pending.timestamp);
+      expect(pending.statusCode, isNull);
+      expect(pending.completedAt, isNull);
+      expect(pending.duration, isNull);
+      expect(pending.responseHeaders, isNull);
+      expect(pending.responseBody.data, isNull);
+      expect(_map(pending.queryParameters)['token'], '***');
+      expect(_map(pending.requestBody.data)['password'], '***');
+      final id = pending.id;
+
+      response.complete(_jsonResponse(<String, Object?>{'ok': true}));
+      await request;
+
+      final completed = controller.events.single as QaNetworkEvent;
+      expect(completed.id, id);
+      expect(completed.outcome, QaNetworkOutcome.success);
+      expect(completed.completedAt, isNotNull);
+      expect(completed.duration, isNotNull);
+      controller.dispose();
+    });
+
     test(
       'captures a successful GET with sanitized request and response data',
       () async {
@@ -45,8 +93,8 @@ void main() {
         expect(event.outcome, QaNetworkOutcome.success);
         expect(event.error, isNull);
         expect(event.timestamp, event.startedAt);
-        expect(event.completedAt.isBefore(event.startedAt), isFalse);
-        expect(event.duration, event.completedAt.difference(event.startedAt));
+        expect(event.completedAt!.isBefore(event.startedAt), isFalse);
+        expect(event.duration, event.completedAt!.difference(event.startedAt));
         expect(event.url, isNot(contains('query-secret')));
         expect(_map(event.queryParameters)['otp'], '***');
         expect(_map(event.requestHeaders)['Authorization'], '***');
@@ -150,22 +198,28 @@ void main() {
       'captures failed response data and preserves original DioException',
       () async {
         final controller = _controller();
+        final response = Completer<ResponseBody>();
         final dio = _dio(
           controller,
-          adapter: _FakeAdapter(
-            (_) => _jsonResponse(
-              <String, Object?>{'error': 'invalid', 'token': 'failure-token'},
-              statusCode: 422,
-              headers: <String, List<String>>{
-                'content-type': <String>['application/json'],
-              },
-            ),
-          ),
+          adapter: _FakeAdapter((_) => response.future),
         );
 
         DioException? caught;
+        final request = dio.get<void>('/failure');
+        await Future<void>.delayed(Duration.zero);
+        final pending = controller.events.single as QaNetworkEvent;
+        expect(pending.outcome, QaNetworkOutcome.pending);
+        response.complete(
+          _jsonResponse(
+            <String, Object?>{'error': 'invalid', 'token': 'failure-token'},
+            statusCode: 422,
+            headers: <String, List<String>>{
+              'content-type': <String>['application/json'],
+            },
+          ),
+        );
         try {
-          await dio.get<void>('/failure');
+          await request;
         } on DioException catch (error) {
           caught = error;
         }
@@ -173,6 +227,7 @@ void main() {
         expect(caught, isNotNull);
         expect(caught?.response?.statusCode, 422);
         final event = controller.events.single as QaNetworkEvent;
+        expect(event.id, pending.id);
         expect(event.statusCode, 422);
         expect(event.outcome, QaNetworkOutcome.failure);
         expect(event.error?.type, DioExceptionType.badResponse.name);
@@ -193,6 +248,8 @@ void main() {
         );
         final token = CancelToken();
         final request = dio.get<void>('/cancel', cancelToken: token);
+        await Future<void>.delayed(Duration.zero);
+        final pending = controller.events.single as QaNetworkEvent;
         token.cancel('host cancellation');
 
         await expectLater(
@@ -206,6 +263,7 @@ void main() {
           ),
         );
         final event = controller.events.single as QaNetworkEvent;
+        expect(event.id, pending.id);
         expect(event.outcome, QaNetworkOutcome.cancelled);
         expect(event.error?.message, 'Request cancelled');
         controller.dispose();
@@ -252,6 +310,15 @@ void main() {
         final firstRequest = dio.get<void>('/first');
         await Future<void>.delayed(Duration.zero);
         final secondRequest = dio.get<void>('/second');
+        await Future<void>.delayed(Duration.zero);
+        final pending = controller.events.whereType<QaNetworkEvent>().toList();
+        expect(pending.map((event) => event.path), <String>[
+          '/first',
+          '/second',
+        ]);
+        final ids = <String, String>{
+          for (final event in pending) event.path: event.id,
+        };
         second.complete(_jsonResponse(<String, Object?>{'order': 2}));
         await secondRequest;
         first.complete(_jsonResponse(<String, Object?>{'order': 1}));
@@ -259,8 +326,8 @@ void main() {
 
         final events = controller.events.whereType<QaNetworkEvent>().toList();
         expect(events.map((event) => event.path), <String>[
-          '/second',
           '/first',
+          '/second',
         ]);
         final firstEvent = events.singleWhere(
           (event) => event.path == '/first',
@@ -269,6 +336,10 @@ void main() {
           (event) => event.path == '/second',
         );
         expect(firstEvent.startedAt.isAfter(secondEvent.startedAt), isFalse);
+        expect(firstEvent.id, ids['/first']);
+        expect(secondEvent.id, ids['/second']);
+        expect(firstEvent.outcome, QaNetworkOutcome.success);
+        expect(secondEvent.outcome, QaNetworkOutcome.success);
         controller.dispose();
       },
     );

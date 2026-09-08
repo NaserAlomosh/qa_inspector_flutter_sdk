@@ -85,10 +85,10 @@ final class QaReportApi {
   final DateTime startedAt;
 
   /// Request completion time.
-  final DateTime completedAt;
+  final DateTime? completedAt;
 
   /// Request duration.
-  final Duration duration;
+  final Duration? duration;
 
   /// HTTP status when available.
   final int? statusCode;

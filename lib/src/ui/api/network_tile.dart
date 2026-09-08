@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../../events/qa_network_event.dart';
 import '../theme/qa_colors.dart';
+import '../theme/qa_inspector_theme_mode.dart';
+import '../theme/qa_theme.dart';
 import '../utils/presentation_formatters.dart';
 
 class NetworkTile extends StatelessWidget {
@@ -11,17 +13,25 @@ class NetworkTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dark = Theme.of(context).brightness == Brightness.dark;
+    final colors = QaTheme.colors(
+      Theme.of(context).brightness == Brightness.dark
+          ? QaInspectorThemeMode.dark
+          : QaInspectorThemeMode.light,
+    );
     final color = switch (event.outcome) {
-      QaNetworkOutcome.success =>
-        dark ? QaColors.successDark : QaColors.success,
-      QaNetworkOutcome.failure =>
-        dark ? QaColors.failureDark : QaColors.failure,
-      QaNetworkOutcome.cancelled =>
-        dark ? QaColors.cancelledDark : QaColors.cancelled,
+      QaNetworkOutcome.pending => colors.pending,
+      QaNetworkOutcome.success => colors.success,
+      QaNetworkOutcome.failure => colors.failure,
+      QaNetworkOutcome.cancelled => colors.cancelled,
     };
-    final status =
-        event.statusCode?.toString() ?? event.outcome.name.toUpperCase();
+    final status = switch (event.outcome) {
+      QaNetworkOutcome.pending => 'Pending',
+      QaNetworkOutcome.cancelled => 'Cancelled',
+      _ => event.statusCode?.toString() ?? 'Unavailable',
+    };
+    final statusLine = event.duration == null
+        ? status
+        : '$status • ${event.duration!.inMilliseconds} ms';
     final path = event.path.isEmpty ? event.url : event.path;
     return Semantics(
       label:
@@ -86,7 +96,7 @@ class NetworkTile extends StatelessWidget {
                       ),
                       const SizedBox(height: 5),
                       Text(
-                        '$status • ${event.duration.inMilliseconds} ms',
+                        statusLine,
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: color,
                           fontWeight: FontWeight.w600,

@@ -2,6 +2,9 @@ import 'qa_event.dart';
 
 /// The final result of an inspected network request.
 enum QaNetworkOutcome {
+  /// The request was sent and is waiting for a response.
+  pending,
+
   /// The request completed with a response accepted by Dio.
   success,
 
@@ -47,9 +50,9 @@ final class QaNetworkError {
   final String message;
 }
 
-/// An immutable, sanitized record of one completed network request.
+/// An immutable, sanitized record of one network request lifecycle.
 final class QaNetworkEvent extends QaEvent {
-  /// Creates a completed network event.
+  /// Creates a network event at its current lifecycle state.
   const QaNetworkEvent({
     required super.id,
     required super.timestamp,
@@ -63,8 +66,8 @@ final class QaNetworkEvent extends QaEvent {
     required this.responseBody,
     required this.statusCode,
     required this.startedAt,
-    required this.completedAt,
-    required this.duration,
+    this.completedAt,
+    this.duration,
     required this.route,
     required this.outcome,
     required this.error,
@@ -100,16 +103,16 @@ final class QaNetworkEvent extends QaEvent {
   /// Time at which Dio began processing the request.
   final DateTime startedAt;
 
-  /// Time at which Dio completed through its response or error path.
-  final DateTime completedAt;
+  /// Time at which Dio completed, or `null` while pending.
+  final DateTime? completedAt;
 
-  /// Elapsed time between [startedAt] and [completedAt].
-  final Duration duration;
+  /// Elapsed time between [startedAt] and [completedAt], when complete.
+  final Duration? duration;
 
   /// Lightweight route name captured at request start.
   final String? route;
 
-  /// Final request outcome.
+  /// Current request outcome.
   final QaNetworkOutcome outcome;
 
   /// Safe error metadata for failed or cancelled requests.
