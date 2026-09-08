@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../events/qa_event.dart';
 import '../events/qa_network_event.dart';
 import '../events/qa_route_event.dart';
-import 'theme/qa_colors.dart';
+import 'theme/qa_theme.dart';
 import 'utils/presentation_formatters.dart';
 
 class SessionSummary extends StatelessWidget {
@@ -17,6 +17,7 @@ class SessionSummary extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = QaTheme.colorsOf(context);
     final apis = events.whereType<QaNetworkEvent>();
     final failed = apis
         .where((event) => event.outcome == QaNetworkOutcome.failure)
@@ -34,7 +35,7 @@ class SessionSummary extends StatelessWidget {
           margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface,
+            color: colors.surface,
             borderRadius: BorderRadius.circular(14),
           ),
           child: Column(
@@ -44,7 +45,7 @@ class SessionSummary extends StatelessWidget {
                 'CURRENT ROUTE',
                 style: Theme.of(
                   context,
-                ).textTheme.labelMedium?.copyWith(color: QaColors.slate),
+                ).textTheme.labelMedium?.copyWith(color: colors.textSecondary),
               ),
               const SizedBox(height: 3),
               Directionality(
@@ -64,7 +65,7 @@ class SessionSummary extends StatelessWidget {
                   _Metric(
                     label: 'Failed',
                     value: '$failed',
-                    color: failed > 0 ? QaColors.failure : null,
+                    color: failed > 0 ? colors.failure : null,
                   ),
                   _Metric(label: 'Events', value: '${events.length}'),
                 ],
@@ -83,20 +84,25 @@ class _Metric extends StatelessWidget {
   final String value;
   final Color? color;
   @override
-  Widget build(BuildContext context) => Expanded(
-    child: Column(
-      children: <Widget>[
-        Text(
-          value,
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(color: color),
-        ),
-        Text(
-          label,
-          style: Theme.of(
-            context,
-          ).textTheme.labelMedium?.copyWith(color: QaColors.slate),
-        ),
-      ],
-    ),
-  );
+  Widget build(BuildContext context) {
+    final colors = QaTheme.colorsOf(context);
+    return Expanded(
+      child: Column(
+        children: <Widget>[
+          Text(
+            value,
+            style: Theme.of(
+              context,
+            ).textTheme.titleLarge?.copyWith(color: color),
+          ),
+          Text(
+            label,
+            style: Theme.of(
+              context,
+            ).textTheme.labelMedium?.copyWith(color: colors.textSecondary),
+          ),
+        ],
+      ),
+    );
+  }
 }

@@ -5,6 +5,7 @@ import '../../events/qa_network_event.dart';
 import '../api/api_details.dart';
 import '../api/network_tile.dart';
 import '../empty_state.dart';
+import '../theme/qa_theme.dart';
 import '../utils/presentation_formatters.dart';
 
 enum _ApiFilter { all, pending, success, failed, cancelled }
@@ -38,6 +39,7 @@ class _ApisTabState extends State<ApisTab> with AutomaticKeepAliveClientMixin {
   @override
   Widget build(BuildContext context) {
     super.build(context);
+    final colors = QaTheme.colorsOf(context);
     final allApis = widget.events.whereType<QaNetworkEvent>().toList(
       growable: false,
     );
@@ -78,13 +80,13 @@ class _ApisTabState extends State<ApisTab> with AutomaticKeepAliveClientMixin {
             decoration: InputDecoration(
               hintText: 'Search URL, path, or method',
               hintStyle: TextStyle(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                color: colors.textSecondary,
                 fontSize: 14,
               ),
               prefixIcon: Icon(
                 Icons.search_rounded,
                 size: 20,
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                color: colors.textSecondary,
               ),
               suffixIcon: _searchController.text.isNotEmpty
                   ? IconButton(
@@ -97,9 +99,7 @@ class _ApisTabState extends State<ApisTab> with AutomaticKeepAliveClientMixin {
                     )
                   : null,
               filled: true,
-              fillColor: Theme.of(
-                context,
-              ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.45),
+              fillColor: colors.surfaceMuted,
               contentPadding: const EdgeInsets.symmetric(
                 horizontal: 14,
                 vertical: 12,
@@ -107,21 +107,19 @@ class _ApisTabState extends State<ApisTab> with AutomaticKeepAliveClientMixin {
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(14),
                 borderSide: BorderSide(
-                  color: Theme.of(context).colorScheme.outlineVariant,
+                  color: colors.border,
                 ),
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(14),
                 borderSide: BorderSide(
-                  color: Theme.of(
-                    context,
-                  ).colorScheme.outlineVariant.withValues(alpha: 0.7),
+                  color: colors.border,
                 ),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(14),
                 borderSide: BorderSide(
-                  color: Theme.of(context).colorScheme.primary,
+                  color: colors.accent,
                   width: 1.4,
                 ),
               ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/qa_inspector_controller.dart';
+import '../theme/qa_theme.dart';
 
 class NotesTab extends StatefulWidget {
   const NotesTab({required this.controller, super.key});
@@ -58,6 +59,7 @@ class _NotesTabState extends State<NotesTab>
   @override
   Widget build(BuildContext context) {
     super.build(context);
+    final colors = QaTheme.colorsOf(context);
 
     return GestureDetector(
       behavior: HitTestBehavior.translucent,
@@ -78,7 +80,7 @@ class _NotesTabState extends State<NotesTab>
             Text(
               'Add steps, expected behavior, or anything developers should know.',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Theme.of(context).colorScheme.outline,
+                color: colors.textSecondary,
               ),
             ),
             const SizedBox(height: 14),

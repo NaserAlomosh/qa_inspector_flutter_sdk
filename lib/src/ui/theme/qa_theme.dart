@@ -13,6 +13,13 @@ abstract final class QaTheme {
   static QaColorTokens colors(QaInspectorThemeMode mode) =>
       mode == QaInspectorThemeMode.dark ? QaColors.dark : QaColors.light;
 
+  /// Reads the semantic palette installed by the inspector's MaterialApp.
+  static QaColorTokens colorsOf(BuildContext context) {
+    final colors = Theme.of(context).extension<QaColorTokens>();
+    assert(colors != null, 'QA widgets must be below InspectorShell.');
+    return colors!;
+  }
+
   static ThemeData light() => _build(Brightness.light);
   static ThemeData dark() => _build(Brightness.dark);
 
@@ -35,20 +42,36 @@ abstract final class QaTheme {
       useMaterial3: true,
       brightness: brightness,
       colorScheme: scheme,
+      extensions: <ThemeExtension<dynamic>>[colors],
       scaffoldBackgroundColor: colors.background,
       textTheme: QaTypography.textTheme(brightness),
-      dividerColor: dark ? QaColors.darkBorder : QaColors.border,
-      appBarTheme: AppBarTheme(backgroundColor: dark ? QaColors.darkSurface : Colors.white, surfaceTintColor: Colors.transparent, elevation: 0),
-      inputDecorationTheme: InputDecorationTheme(filled: true, fillColor: dark ? const Color(0xFF202531) : Colors.white, isDense: true, border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none)),
-      chipTheme: ChipThemeData(side: BorderSide(color: dark ? const Color(0xFF3B4251) : const Color(0xFFD9DEE8)), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(9))),
-      dialogTheme: DialogThemeData(backgroundColor: dark ? QaColors.darkSurface : Colors.white),
+      dividerColor: colors.border,
+      appBarTheme: AppBarTheme(
+        backgroundColor: colors.surface,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+      ),
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: colors.surfaceMuted,
+        isDense: true,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
+        ),
+      ),
+      chipTheme: ChipThemeData(
+        side: BorderSide(color: colors.borderStrong),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(9)),
+      ),
+      dialogTheme: DialogThemeData(backgroundColor: colors.surfaceElevated),
       splashFactory: InkSparkle.splashFactory,
       visualDensity: VisualDensity.standard,
       tabBarTheme: TabBarThemeData(
-        dividerColor: dark ? QaColors.darkBorder : QaColors.border,
+        dividerColor: colors.border,
         indicatorSize: TabBarIndicatorSize.tab,
-        labelColor: dark ? QaColors.accentDark : QaColors.accent,
-        unselectedLabelColor: dark ? const Color(0xFF9CA5B5) : QaColors.slate,
+        labelColor: colors.accent,
+        unselectedLabelColor: colors.textSecondary,
       ),
     );
   }

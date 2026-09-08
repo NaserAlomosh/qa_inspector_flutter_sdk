@@ -14,7 +14,6 @@ import 'tabs/apis_tab.dart';
 import 'tabs/notes_tab.dart';
 import 'tabs/routes_tab.dart';
 import 'tabs/timeline_tab.dart';
-import 'theme/qa_colors.dart';
 import 'theme/qa_inspector_theme_mode.dart';
 import 'theme/qa_theme.dart';
 
@@ -158,8 +157,8 @@ class _InspectorState extends State<_Inspector>
                 Container(
                   width: 7,
                   height: 7,
-                  decoration: const BoxDecoration(
-                    color: QaColors.success,
+                  decoration: BoxDecoration(
+                    color: QaTheme.colorsOf(context).success,
                     shape: BoxShape.circle,
                   ),
                 ),
@@ -168,7 +167,9 @@ class _InspectorState extends State<_Inspector>
                   'LIVE SESSION',
                   style: Theme.of(
                     context,
-                  ).textTheme.labelMedium?.copyWith(color: QaColors.success),
+                  ).textTheme.labelMedium?.copyWith(
+                    color: QaTheme.colorsOf(context).success,
+                  ),
                 ),
               ],
             ),
@@ -409,12 +410,12 @@ class _InspectorState extends State<_Inspector>
           ),
           FilledButton(
             key: const Key('qa-confirm-clear'),
-            style: FilledButton.styleFrom(backgroundColor: QaColors.failure),
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text(
-              'Clear Session',
-              style: TextStyle(color: Colors.white),
+            style: FilledButton.styleFrom(
+              backgroundColor: QaTheme.colorsOf(context).failure,
+              foregroundColor: QaTheme.colorsOf(context).buttonForeground,
             ),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Clear Session'),
           ),
         ],
       ),
