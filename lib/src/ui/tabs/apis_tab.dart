@@ -7,7 +7,7 @@ import '../api/network_tile.dart';
 import '../empty_state.dart';
 import '../utils/presentation_formatters.dart';
 
-enum _ApiFilter { all, success, failed, cancelled }
+enum _ApiFilter { all, pending, success, failed, cancelled }
 
 /// Displays searchable and filterable network events.
 class ApisTab extends StatefulWidget {
@@ -49,6 +49,7 @@ class _ApisTabState extends State<ApisTab> with AutomaticKeepAliveClientMixin {
         .where((api) {
           final matchesFilter = switch (_filter) {
             _ApiFilter.all => true,
+            _ApiFilter.pending => api.outcome == QaNetworkOutcome.pending,
             _ApiFilter.success => api.outcome == QaNetworkOutcome.success,
             _ApiFilter.failed => api.outcome == QaNetworkOutcome.failure,
             _ApiFilter.cancelled => api.outcome == QaNetworkOutcome.cancelled,
@@ -198,6 +199,7 @@ class _ApisTabState extends State<ApisTab> with AutomaticKeepAliveClientMixin {
 
 String _filterLabel(_ApiFilter filter) => switch (filter) {
   _ApiFilter.all => 'All',
+  _ApiFilter.pending => 'Pending',
   _ApiFilter.success => 'Success',
   _ApiFilter.failed => 'Failed',
   _ApiFilter.cancelled => 'Cancelled',

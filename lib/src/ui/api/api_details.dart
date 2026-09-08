@@ -24,7 +24,10 @@ class ApiDetails extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final request = prettyValue(event.requestBody.data);
-    final response = prettyValue(event.responseBody.data);
+    final pending = event.outcome == QaNetworkOutcome.pending;
+    final response = pending
+        ? 'Waiting for response'
+        : prettyValue(event.responseBody.data);
     final details = formatFullApiDetails(
       event,
       request: request,
@@ -55,9 +58,9 @@ class ApiDetails extends StatelessWidget {
             title: 'General',
             value:
                 'Method: ${event.method}\nURL: ${event.url}\nRoute: ${formatRoute(event.route)}\n'
-                'Status: ${event.statusCode ?? '—'}\nOutcome: ${event.outcome.name}\n'
-                'Started: ${event.startedAt.toIso8601String()}\nCompleted: ${event.completedAt.toIso8601String()}\n'
-                'Duration: ${event.duration.inMilliseconds} ms\n'
+                'Status: ${pending ? 'Pending' : event.statusCode ?? '—'}\nOutcome: ${event.outcome.name}\n'
+                'Started: ${event.startedAt.toIso8601String()}\nCompleted: ${event.completedAt?.toIso8601String() ?? 'Waiting for response'}\n'
+                'Duration: ${event.duration == null ? 'Pending' : '${event.duration!.inMilliseconds} ms'}\n'
                 'Request truncated: ${event.requestBody.isTruncated}\nResponse truncated: ${event.responseBody.isTruncated}',
             copyKey: const Key('qa-copy-url'),
             copyValue: event.url,

@@ -25,6 +25,19 @@ final class QaEventTimeline extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Replaces the event with [event.id] without changing its position.
+  ///
+  /// Returns whether a matching event was present in this session.
+  bool replace(QaEvent event) {
+    final index = _events.indexWhere((existing) => existing.id == event.id);
+    if (index < 0) {
+      return false;
+    }
+    _events[index] = event;
+    notifyListeners();
+    return true;
+  }
+
   void clear() {
     if (_events.isEmpty) {
       return;

@@ -169,10 +169,12 @@ class _ApiCard extends StatelessWidget {
             style: const TextStyle(fontWeight: FontWeight.w700),
           ),
           Text(
-            'Status: ${api.statusCode ?? (api.outcome == QaNetworkOutcome.cancelled ? 'Cancelled' : 'Unavailable')}',
+            'Status: ${api.statusCode ?? (api.outcome == QaNetworkOutcome.pending ? 'Pending' : api.outcome == QaNetworkOutcome.cancelled ? 'Cancelled' : 'Unavailable')}',
           ),
           Text('Outcome: ${api.outcome.name.toUpperCase()}'),
-          Text('Duration: ${api.duration.inMilliseconds} ms'),
+          Text(
+            'Duration: ${api.duration == null ? 'Pending' : '${api.duration!.inMilliseconds} ms'}',
+          ),
           const SizedBox(height: 8),
           _Payload(label: 'Query', value: api.queryParameters),
           _Payload(

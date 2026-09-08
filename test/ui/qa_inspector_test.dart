@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:qa_inspector/qa_inspector.dart';
+import 'package:qa_inspector/src/ui/theme/qa_colors.dart';
 
 void main() {
   testWidgets('disabled inspector renders only the host child', (tester) async {
@@ -425,11 +426,74 @@ void main() {
     },
   );
 
+  testWidgets('network lifecycle rows use SDK dark semantic colors', (
+    tester,
+  ) async {
+    final controller = _controller();
+    _addNetwork(
+      controller,
+      id: 'pending-color',
+      path: '/pending',
+      outcome: QaNetworkOutcome.pending,
+      status: null,
+    );
+    _addNetwork(controller, id: 'success-color', path: '/success');
+    _addNetwork(
+      controller,
+      id: 'failure-color',
+      path: '/failure',
+      outcome: QaNetworkOutcome.failure,
+      status: 500,
+    );
+    _addNetwork(
+      controller,
+      id: 'cancelled-color',
+      path: '/cancelled',
+      outcome: QaNetworkOutcome.cancelled,
+      status: null,
+    );
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: ThemeData(
+          colorScheme: ColorScheme.fromSeed(seedColor: Colors.pink),
+        ),
+        home: QaInspector(controller: controller, child: const SizedBox()),
+      ),
+    );
+    await tester.tap(find.byKey(const Key('qa-inspector-button')));
+    await tester.pumpAndSettle();
+
+    expect(
+      tester.widget<Text>(find.text('Pending')).style?.color,
+      QaColors.dark.pending,
+    );
+    expect(
+      tester.widget<Text>(find.text('200 • 182 ms')).style?.color,
+      QaColors.dark.success,
+    );
+    expect(
+      tester.widget<Text>(find.text('500 • 182 ms')).style?.color,
+      QaColors.dark.failure,
+    );
+    expect(
+      tester.widget<Text>(find.text('Cancelled • 182 ms')).style?.color,
+      QaColors.dark.cancelled,
+    );
+    controller.dispose();
+  });
+
   testWidgets(
     'API filters, method search, and route grouping derive from timeline',
     (tester) async {
       final controller = _controller();
       _addNetwork(controller, id: 'success', path: '/accounts', method: 'GET');
+      _addNetwork(
+        controller,
+        id: 'pending',
+        path: '/pending',
+        outcome: QaNetworkOutcome.pending,
+        status: null,
+      );
       _addNetwork(
         controller,
         id: 'failed',
@@ -454,6 +518,13 @@ void main() {
       expect(find.byKey(const Key('qa-network-success')), findsOneWidget);
       expect(find.byKey(const Key('qa-network-failed')), findsOneWidget);
       expect(find.byKey(const Key('qa-network-cancelled')), findsOneWidget);
+      expect(find.byKey(const Key('qa-network-pending')), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key('qa-filter-pending')));
+      await tester.pump();
+      expect(find.byKey(const Key('qa-network-pending')), findsOneWidget);
+      expect(find.text('Pending'), findsWidgets);
+      expect(find.byKey(const Key('qa-network-success')), findsNothing);
 
       await tester.tap(find.byKey(const Key('qa-filter-failed')));
       await tester.pump();
@@ -532,6 +603,28 @@ void main() {
 
     expect(find.textContaining('Type: badResponse'), findsOneWidget);
     expect(find.textContaining('Message: Safe failure'), findsOneWidget);
+    controller.dispose();
+  });
+
+  testWidgets('pending API opens details without a response', (tester) async {
+    final controller = _controller();
+    _addNetwork(
+      controller,
+      id: 'pending-detail',
+      path: '/slow',
+      outcome: QaNetworkOutcome.pending,
+      status: null,
+    );
+    await tester.pumpWidget(_openHost(controller));
+    await tester.tap(find.byKey(const Key('qa-inspector-button')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('APIs'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('qa-network-pending-detail')));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('Status: Pending'), findsOneWidget);
+    expect(find.text('Waiting for response'), findsWidgets);
     controller.dispose();
   });
 
@@ -794,19 +887,25 @@ void _addNetwork(
         originalSize: truncated ? 60000 : 24,
         capturedSize: truncated ? 48 : 24,
       ),
-      responseHeaders: const <String, Object?>{
-        'content-type': 'application/json',
-      },
+      responseHeaders: outcome == QaNetworkOutcome.pending
+          ? null
+          : const <String, Object?>{'content-type': 'application/json'},
       responseBody: QaPayloadCapture(
-        data: const <String, Object?>{'result': 'accepted'},
+        data: outcome == QaNetworkOutcome.pending
+            ? null
+            : const <String, Object?>{'result': 'accepted'},
         isTruncated: truncated,
         originalSize: truncated ? 60000 : 21,
         capturedSize: truncated ? 48 : 21,
       ),
       statusCode: status,
       startedAt: startedAt,
-      completedAt: startedAt.add(const Duration(milliseconds: 182)),
-      duration: const Duration(milliseconds: 182),
+      completedAt: outcome == QaNetworkOutcome.pending
+          ? null
+          : startedAt.add(const Duration(milliseconds: 182)),
+      duration: outcome == QaNetworkOutcome.pending
+          ? null
+          : const Duration(milliseconds: 182),
       route: route,
       outcome: outcome,
       error: outcome == QaNetworkOutcome.failure

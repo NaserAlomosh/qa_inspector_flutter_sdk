@@ -97,6 +97,25 @@ void main() {
       expect(notifications, 3);
     });
 
+    test('replaces an event in place and notifies once', () {
+      final timeline = QaEventTimeline(maxEvents: 3);
+      var notifications = 0;
+      timeline.addListener(() => notifications++);
+      timeline
+        ..add(eventWithIndex(0))
+        ..add(eventWithIndex(1));
+      final replacement = TestEvent(
+        id: '0',
+        timestamp: DateTime.utc(2027),
+      );
+
+      expect(timeline.replace(replacement), isTrue);
+      expect(timeline.events, <QaEvent>[replacement, eventWithIndex(1)]);
+      expect(notifications, 3);
+      expect(timeline.replace(eventWithIndex(9)), isFalse);
+      expect(notifications, 3);
+    });
+
     test('retains only the newest rapid additions', () {
       final timeline = QaEventTimeline(maxEvents: 10);
 

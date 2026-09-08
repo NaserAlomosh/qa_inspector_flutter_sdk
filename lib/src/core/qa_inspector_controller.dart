@@ -90,6 +90,16 @@ final class QaInspectorController {
     _runtime.publish(event);
   }
 
+  /// Replaces a collector event if its originating session is still current.
+  void replaceEvent(QaEvent event, {required int sessionGeneration}) {
+    if (!config.enabled ||
+        _isDisposed ||
+        sessionGeneration != _runtime.sessionGeneration) {
+      return;
+    }
+    _runtime.timeline.replace(event);
+  }
+
   /// Creates an identifier in the shared runtime event sequence.
   ///
   /// This is intended for SDK collectors.

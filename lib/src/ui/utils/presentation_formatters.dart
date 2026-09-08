@@ -40,7 +40,7 @@ String formatFullApiDetails(
   required String response,
 }) =>
     '${event.method} ${event.url}\nRoute: ${formatRoute(event.route)}\nStatus: ${event.statusCode ?? '—'}\n'
-    'Outcome: ${event.outcome.name}\nDuration: ${event.duration.inMilliseconds} ms\n'
+    'Outcome: ${event.outcome.name}\nDuration: ${event.duration == null ? 'Pending' : '${event.duration!.inMilliseconds} ms'}\n'
     'Request headers:\n${prettyValue(event.requestHeaders)}\nRequest query:\n${prettyValue(event.queryParameters)}\n'
     'Request body:\n$request${formatTruncation(event.requestBody)}\nResponse headers:\n${prettyValue(event.responseHeaders)}\n'
     'Response body:\n$response${formatTruncation(event.responseBody)}\nError: '

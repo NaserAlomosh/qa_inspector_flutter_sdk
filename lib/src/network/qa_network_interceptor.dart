@@ -51,9 +51,12 @@ final class QaNetworkInterceptor extends Interceptor {
     try {
       if (!options.extra.containsKey(_contextKey)) {
         final startedAt = DateTime.now();
-        options.extra[_contextKey] = _RequestContext(
+        final generation = controller.sessionGeneration;
+        final eventId = controller.nextEventId();
+        final context = _RequestContext(
           owner: _owner,
-          generation: controller.sessionGeneration,
+          generation: generation,
+          eventId: eventId,
           startedAt: startedAt,
           route: controller.currentRoute,
           method: options.method,
@@ -64,6 +67,32 @@ final class QaNetworkInterceptor extends Interceptor {
           ),
           requestHeaders: _freeze(_sanitizer.sanitizeHeaders(options.headers)),
           requestBody: _captureRequestBody(options.data),
+        );
+        options.extra[_contextKey] = context;
+        controller.recordEvent(
+          QaNetworkEvent(
+            id: eventId,
+            timestamp: startedAt,
+            method: context.method,
+            url: context.url,
+            path: context.path,
+            queryParameters: context.queryParameters,
+            requestHeaders: context.requestHeaders,
+            requestBody: context.requestBody,
+            responseHeaders: null,
+            responseBody: const QaPayloadCapture(
+              data: null,
+              isTruncated: false,
+              originalSize: null,
+              capturedSize: null,
+            ),
+            statusCode: null,
+            startedAt: startedAt,
+            route: context.route,
+            outcome: QaNetworkOutcome.pending,
+            error: null,
+          ),
+          sessionGeneration: generation,
         );
       }
     } catch (_) {
@@ -241,7 +270,7 @@ final class QaNetworkInterceptor extends Interceptor {
     }
     final completedAt = DateTime.now();
     final event = QaNetworkEvent(
-      id: controller.nextEventId(),
+      id: context.eventId,
       timestamp: context.startedAt,
       method: context.method,
       url: context.url,
@@ -261,7 +290,7 @@ final class QaNetworkInterceptor extends Interceptor {
       outcome: outcome,
       error: error,
     );
-    controller.recordEvent(event, sessionGeneration: context.generation);
+    controller.replaceEvent(event, sessionGeneration: context.generation);
   }
 }
 
@@ -269,6 +298,7 @@ final class _RequestContext {
   const _RequestContext({
     required this.owner,
     required this.generation,
+    required this.eventId,
     required this.startedAt,
     required this.route,
     required this.method,
@@ -281,6 +311,7 @@ final class _RequestContext {
 
   final Object owner;
   final int generation;
+  final String eventId;
   final DateTime startedAt;
   final String? route;
   final String method;

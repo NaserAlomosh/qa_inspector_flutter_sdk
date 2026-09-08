@@ -117,6 +117,32 @@ void main() {
       expect(data.steps.single.apis, hasLength(1));
     });
 
+    test('represents pending APIs without classifying them as failed', () {
+      final pending = _network(
+        'pending',
+        base,
+        '/home',
+        outcome: QaNetworkOutcome.pending,
+      );
+      final data = const QaReportBuilder().build(
+        events: <QaEvent>[pending],
+        notes: '',
+        currentRoute: '/home',
+        generatedAt: base,
+      );
+      final api = data.steps.single.apis.single;
+
+      expect(data.failedApis, 0);
+      expect(api.statusCode, isNull);
+      expect(api.completedAt, isNull);
+      expect(api.duration, isNull);
+      expect(api.responseBody, 'Waiting for response');
+      expect(
+        const QaReportTextRenderer().render(data),
+        contains('Status: Pending'),
+      );
+    });
+
     test(
       'includes outcomes, payloads, errors, and truncation without raw secrets',
       () {
@@ -682,20 +708,28 @@ QaNetworkEvent _network(
   ),
   responseHeaders: null,
   responseBody: QaPayloadCapture(
-    data: response ?? const <String, Object?>{'ok': true},
+    data: outcome == QaNetworkOutcome.pending
+        ? null
+        : response ?? const <String, Object?>{'ok': true},
     isTruncated: truncated,
     originalSize: null,
     capturedSize: null,
   ),
-  statusCode: outcome == QaNetworkOutcome.cancelled
+  statusCode: outcome == QaNetworkOutcome.cancelled ||
+          outcome == QaNetworkOutcome.pending
       ? null
       : (outcome == QaNetworkOutcome.failure ? 500 : 200),
   startedAt: started,
-  completedAt: started.add(Duration(seconds: completedOffset)),
-  duration: Duration(seconds: completedOffset),
+  completedAt: outcome == QaNetworkOutcome.pending
+      ? null
+      : started.add(Duration(seconds: completedOffset)),
+  duration: outcome == QaNetworkOutcome.pending
+      ? null
+      : Duration(seconds: completedOffset),
   route: route,
   outcome: outcome,
-  error: outcome == QaNetworkOutcome.success
+  error: outcome == QaNetworkOutcome.success ||
+          outcome == QaNetworkOutcome.pending
       ? null
       : const QaNetworkError(type: 'badResponse', message: 'Safe failure'),
 );

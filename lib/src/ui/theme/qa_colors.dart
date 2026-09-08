@@ -47,7 +47,8 @@ abstract final class QaColors {
 
     success: success,
     failure: failure,
-    warning: cancelled,
+    pending: Color(0xFFB7791F),
+    cancelled: cancelled,
     navigation: navigation,
 
     codeBackground: Color(0xFFF5F6F8),
@@ -85,7 +86,8 @@ abstract final class QaColors {
     // Semantic colors
     success: Color(0xFF5BC99A),
     failure: Color(0xFFF07883),
-    warning: Color(0xFFE7AE61),
+    pending: Color(0xFFE7AE61),
+    cancelled: Color(0xFFD89A55),
     navigation: Color(0xFF75A7E8),
 
     // JSON / request / response
@@ -116,7 +118,8 @@ final class QaColorTokens {
     required this.accent,
     required this.success,
     required this.failure,
-    required this.warning,
+    required this.pending,
+    required this.cancelled,
     required this.navigation,
     required this.codeBackground,
     required this.buttonForeground,
@@ -139,7 +142,8 @@ final class QaColorTokens {
 
   final Color success;
   final Color failure;
-  final Color warning;
+  final Color pending;
+  final Color cancelled;
   final Color navigation;
 
   final Color codeBackground;

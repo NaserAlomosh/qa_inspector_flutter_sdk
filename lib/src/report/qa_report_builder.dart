@@ -184,7 +184,9 @@ final class QaReportBuilder {
     outcome: event.outcome,
     queryParameters: _format(event.queryParameters),
     requestBody: _format(event.requestBody.data),
-    responseBody: _format(event.responseBody.data),
+    responseBody: event.outcome == QaNetworkOutcome.pending
+        ? 'Waiting for response'
+        : _format(event.responseBody.data),
     requestTruncated: event.requestBody.isTruncated,
     responseTruncated: event.responseBody.isTruncated,
     errorType: event.error?.type,
